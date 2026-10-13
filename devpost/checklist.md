@@ -30,17 +30,18 @@ Build mode: fast
   Learner check: Run `npm run dev`, open http://localhost:5173, tap Try an example (or paste your own lesson) and press Make my video. Watch it: is it the same caveman in every scene, and does his acting fit the words? Does the Start screen feel like the cave-paper sketchbook you described?
   Commit: `Make a lesson into an acted caveman video in the player`
 
-- [ ] **2. Download the video as an MP4, with sound**
+- [x] **2. Download the video as an MP4, with sound**
   Becomes usable: Download video opens the export panel (Standard 720p or HD 1080p, end card toggle). It renders the same composition into an MP4 in the browser, with progress, time left and Cancel, and saves `<topic>-heycaveman.mp4` with gentle sound effects and the end card.
-  Why now: Biggest technical risk (`spec.md > Decisions and Open Issues`, unknown 2): does Remotion's web renderer produce an MP4 with audio in sync? Finding out now means a fallback costs one slice, not a rebuild.
+  Why now: Biggest technical risk (`spec.md > Decisions and Open Issues`, unknown 2): can the browser turn our scenes into an MP4 with audio in sync, with nothing leaving the device? This slice also moves the player onto our own SVG renderer (see Revisions), so preview and export share one drawing code path.
   PRD ref: `prd.md > F13 — Download video (export)`, `prd.md > F11 — Sound effects`, `prd.md > F12 — Education extras` (end card)
-  Spec ref: `spec.md > Export (F13)`, `spec.md > Sound effects (F11)`, `spec.md > Education extras (F12)`, `spec.md > Important Failure Modes`
+  Spec ref: `spec.md > Video scene renderer (SVG)`, `spec.md > Player (F7)`, `spec.md > Export (F13)`, `spec.md > Sound effects (F11)`, `spec.md > Education extras (F12)`, `spec.md > Important Failure Modes`
   Build:
-    - Get the 10 CC0 sound effects: copy them from stickmotion if suitable ones exist, otherwise generate gentle ones with a small Web Audio script to WAV.
+    - Replace Remotion: `video/SceneSvg.tsx`, `video/timeline.ts` and `video/spring.ts`, plus our own player clock, scrub bar and thumbnails, with no visible change from slice 1.
+    - The 10 CC0 sound effects are already copied (slice 1).
     - The director's `sfx.ts` and the composition's `<Audio>` layers.
     - The end card scene.
-    - `export/capability.ts`, `export/renderMp4.ts` using `@remotion/web-renderer`, and the `ExportPanel` with progress, Cancel and hidden-tab pause.
-    - If the renderer drops audio, implement the `audioMix.ts` fallback (OfflineAudioContext plus Mediabunny mux) and record a revision.
+    - `export/capability.ts`, `export/renderMp4.ts` (SVG frame → canvas → Mediabunny `CanvasSource`, H.264), `export/audioMix.ts` (OfflineAudioContext → Mediabunny `AudioBufferSource`, AAC), and the `ExportPanel` with progress, Cancel and hidden-tab pause.
+    - Sound effects in the player through Web Audio.
   Verify (mechanical):
     - A Playwright script exports a 10 s two-scene video. `ffprobe` (or Mediabunny in the test) confirms an H.264 video track at 1280×720, an audio track, a duration within ±0.2 s of the plan, and audio onset aligned with the first sound effect within one frame.
     - A 1-minute 720p export is timed and the result recorded.
@@ -157,7 +158,7 @@ Build mode: fast
     - Help (illustrated, offline), About (licences, credits, privacy promise) and Report a problem.
     - The premium bridge (More looks shelf, locked items, Lesson Builder footer, Open in HeyCaveman with the launch discount code), all dismissible and hidden in Classroom mode.
     - An accessibility pass.
-    - README, `LICENSE` (unmodified AGPL-3.0, detected by GitHub), `LICENSE-EXCEPTION.md` (Remotion permission), `LICENSE-ASSETS.md` (CC0, with provenance), the For-schools privacy sheet, and the Remotion licence note.
+    - README, `LICENSE` (unmodified AGPL-3.0, detected by GitHub), `LICENSE-ASSETS.md` (CC0, with provenance), and the For-schools privacy sheet.
   Why now: M4 polish plus M5. It wraps finished features without changing them, and it's last because it can be cut down if time runs short.
   PRD ref: `prd.md > F16 — Settings, help & about`, `prd.md > F15 — The bridge to HeyCaveman (premium)`, `prd.md > Non-Functional Requirements` (Accessibility, Privacy and child safety), `prd.md > Product Decisions`
   Spec ref: `spec.md > Settings, help and about (F16)`, `spec.md > Premium bridge (F15)`, `spec.md > Look and Feel`, `spec.md > External Services and Dependencies`, `spec.md > Where It Runs and How Someone Tries It`
@@ -192,3 +193,6 @@ Reflection:
 Activity mode:
 
 ## Revisions
+
+- Replaced Remotion (player and web renderer) with our own SVG scene renderer plus Mediabunny for MP4 export (learner chose this in slice 2). The build found that `@remotion/web-renderer` sends a usage event (site address, success) to remotion.pro on every export, even with the free licence, which breaks the PRD's "nothing leaves the device" promise and its "zero requests to other domains" check. The AGPL Remotion exception was dropped with it. Slice 1's director, rig and design are unchanged.
+- Slice 2 measurements: the exported MP4 is H.264 1280×720 with AAC 48 kHz stereo. The first sound effect starts at 0.150 s (planned 0.15 s) and the "Remember" ding at 4.150 s (scene start + 0.35 s). The export made zero requests to other domains. Speed on the build PC (headless Chromium): an 84 s video exported in 91 s, about 1.1× real time. The PRD budget (1 min in under 2 min on a Chromebook) needs re-checking on slower hardware; frame painting is the cost to optimise if needed.

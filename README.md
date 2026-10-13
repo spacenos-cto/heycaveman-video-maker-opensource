@@ -22,6 +22,6 @@ npm run test:e2e   # browser tests (first: npx playwright install chromium)
 
 ## Licence
 
-- The code will be released under AGPL-3.0, with an added permission to use Remotion.
-- The art and sounds are CC0 (see `assets/LICENSE-ASSETS.md`).
-- Remotion, the video library this app uses, has its own licence: free for individuals, companies with up to 3 employees and non-profits. https://github.com/remotion-dev/remotion/blob/main/LICENSE.md
+- **Code:** AGPL-3.0.
+- **Art and sounds:** CC0 (see `assets/LICENSE-ASSETS.md`).
+- **Privacy:** the app has no analytics or usage pings. Videos are drawn and encoded in your browser with [Mediabunny](https://mediabunny.dev) (MPL-2.0).

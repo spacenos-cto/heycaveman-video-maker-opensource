@@ -1,69 +1,108 @@
-// Watch the video (devpost/prd.md > F7): our own controls around Remotion's Player, a scrub bar with
-// scene markers and a row of scene thumbnails. The same LessonVideo composition later exports to MP4.
+// Watch the video (devpost/prd.md > F7). Our own player: a frame clock draws the current scene's SVG
+// about 30 times a second, sounds play through Web Audio, and the same SVG becomes the MP4 on export.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Player, Thumbnail, type PlayerRef } from '@remotion/player';
-import { ArrowLeft, Maximize, Pause, Play } from 'lucide-react';
+import { ArrowLeft, Download, Maximize, Pause, Play } from 'lucide-react';
+import { playSfxFrom } from '../audio/sounds';
 import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import { Button } from '../ui/Button';
-import { FPS, LessonVideo, SIZES, sceneFrames, timeline } from '../video/LessonVideo';
+import { SceneSvg } from '../video/SceneSvg';
+import { FPS, locate, sceneFrames, timeline } from '../video/timeline';
+import { ExportPanel } from './ExportPanel';
 
 const fmt = (frames: number) => {
   const s = Math.floor(frames / FPS);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
+let sharedAudio: AudioContext | null = null;
+
 export function PlayerScreen() {
   const { project, go } = useApp();
-  const player = useRef<PlayerRef>(null);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const { starts, total } = useMemo(() => (project ? timeline(project) : { starts: [], total: 1 }), [project]);
-  const size = project ? SIZES[project.shape] : SIZES.wide;
-  const inputProps = useMemo(() => ({ project: project! }), [project]);
-  const sceneIndex = Math.max(0, starts.findLastIndex((s) => s <= frame));
+  const [exporting, setExporting] = useState(false);
+  const stage = useRef<HTMLDivElement>(null);
+  const clock = useRef<{ raf: number; startAt: number; startFrame: number; stopAudio?: () => void; token: number }>({ raf: 0, startAt: 0, startFrame: 0, token: 0 });
+  const tl = useMemo(() => (project ? timeline(project) : null), [project]);
 
-  useEffect(() => {
-    const p = player.current;
-    if (!p) return;
-    const onFrame = (e: { detail: { frame: number } }) => setFrame(e.detail.frame);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    p.addEventListener('frameupdate', onFrame);
-    p.addEventListener('play', onPlay);
-    p.addEventListener('pause', onPause);
-    p.addEventListener('ended', onPause);
-    return () => {
-      p.removeEventListener('frameupdate', onFrame);
-      p.removeEventListener('play', onPlay);
-      p.removeEventListener('pause', onPause);
-      p.removeEventListener('ended', onPause);
-    };
-  }, [project]);
+  const stop = useCallback(() => {
+    const c = clock.current;
+    c.token++;
+    cancelAnimationFrame(c.raf);
+    c.stopAudio?.();
+    c.stopAudio = undefined;
+    setPlaying(false);
+  }, []);
 
-  const jump = useCallback(
-    (i: number) => {
-      const target = starts[Math.min(Math.max(i, 0), starts.length - 1)] ?? 0;
-      player.current?.seekTo(target);
-      setFrame(target);
+  const play = useCallback(
+    async (from: number) => {
+      if (!project || !tl) return;
+      stop();
+      const c = clock.current;
+      const token = ++c.token;
+      const start = from >= tl.total - 1 ? 0 : from;
+      setPlaying(true);
+      try {
+        sharedAudio ??= new AudioContext();
+        await sharedAudio.resume();
+        const stopAudio = await playSfxFrom(sharedAudio, project, start / FPS);
+        if (token !== c.token) return stopAudio();
+        c.stopAudio = stopAudio;
+      } catch {
+        /* audio blocked or unavailable: play silently */
+      }
+      if (token !== c.token) return;
+      c.startAt = performance.now();
+      c.startFrame = start;
+      const tick = () => {
+        const f = c.startFrame + ((performance.now() - c.startAt) / 1000) * FPS;
+        if (f >= tl.total - 1) {
+          setFrame(tl.total - 1);
+          stop();
+          return;
+        }
+        setFrame(Math.floor(f));
+        c.raf = requestAnimationFrame(tick);
+      };
+      c.raf = requestAnimationFrame(tick);
     },
-    [starts],
+    [project, tl, stop],
   );
+
+  const toggle = useCallback(() => (playing ? stop() : void play(frame)), [playing, stop, play, frame]);
+
+  const seek = useCallback(
+    (f: number) => {
+      if (!tl) return;
+      const target = Math.min(Math.max(0, Math.round(f)), tl.total - 1);
+      const wasPlaying = playing;
+      stop();
+      setFrame(target);
+      if (wasPlaying) void play(target);
+    },
+    [tl, playing, stop, play],
+  );
+
+  const at = tl ? locate(tl, frame) : { index: 0, local: 0 };
+  const jump = useCallback((i: number) => tl && seek(tl.starts[Math.min(Math.max(i, 0), tl.starts.length - 1)]), [tl, seek]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.closest('input, textarea, select')) return;
+      if (exporting || (e.target as HTMLElement)?.closest('input, textarea, select, [role=dialog]')) return;
       if (e.key === ' ') {
         e.preventDefault();
-        player.current?.toggle();
-      } else if (e.key === 'ArrowRight') jump(sceneIndex + 1);
-      else if (e.key === 'ArrowLeft') jump(sceneIndex - 1);
+        toggle();
+      } else if (e.key === 'ArrowRight') jump(at.index + 1);
+      else if (e.key === 'ArrowLeft') jump(at.index - 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [jump, sceneIndex]);
+  }, [toggle, jump, at.index, exporting]);
 
-  if (!project) {
+  useEffect(() => stop, [stop]);
+
+  if (!project || !tl) {
     go('start');
     return null;
   }
@@ -75,25 +114,19 @@ export function PlayerScreen() {
       </Button>
       <h1 className="mt-2 font-display text-2xl font-bold">{project.title}</h1>
 
-      {/* The video sits on a charcoal "slate" frame. */}
-      <div className="mt-4 overflow-hidden rounded-[14px] border-2 border-charcoal bg-charcoal" data-testid="player">
-        <Player
-          ref={player}
-          component={LessonVideo}
-          inputProps={inputProps}
-          durationInFrames={total}
-          compositionWidth={size.width}
-          compositionHeight={size.height}
-          fps={FPS}
-          controls={false}
-          clickToPlay
-          style={{ width: '100%', aspectRatio: `${size.width} / ${size.height}`, maxHeight: '70vh' }}
-          acknowledgeRemotionLicense
-        />
+      {/* The video sits on a charcoal "slate" frame. Click to play or pause. */}
+      <div
+        ref={stage}
+        className="mx-auto mt-4 overflow-hidden rounded-[14px] border-2 border-charcoal bg-charcoal"
+        style={{ maxWidth: project.shape === 'wide' ? '100%' : project.shape === 'square' ? '70vh' : '40vh' }}
+        data-testid="player"
+        onClick={toggle}
+      >
+        <SceneSvg project={project} scene={tl.scenes[at.index]} frame={at.local} index={at.index} />
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Button variant="primary" onClick={() => player.current?.toggle()} aria-label={playing ? en.player.pause : en.player.play}>
+        <Button variant="primary" onClick={toggle} aria-label={playing ? en.player.pause : en.player.play}>
           {playing ? <Pause size={18} fill="currentColor" aria-hidden="true" /> : <Play size={18} fill="currentColor" aria-hidden="true" />}
           {playing ? en.player.pause : en.player.play}
         </Button>
@@ -102,57 +135,48 @@ export function PlayerScreen() {
             type="range"
             aria-label="Position in the video"
             min={0}
-            max={total - 1}
+            max={tl.total - 1}
             value={frame}
-            onChange={(e) => {
-              const f = Number(e.target.value);
-              player.current?.seekTo(f);
-              setFrame(f);
-            }}
+            onChange={(e) => seek(Number(e.target.value))}
             className="w-full accent-[#E8892B]"
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-full" aria-hidden="true">
-            {starts.slice(1).map((s) => (
-              <span key={s} className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-charcoal/50" style={{ left: `${(s / total) * 100}%` }} />
+            {tl.starts.slice(1).map((s) => (
+              <span key={s} className="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-charcoal/50" style={{ left: `${(s / tl.total) * 100}%` }} />
             ))}
           </div>
         </div>
         <span className="font-display tabular-nums text-ash" data-testid="time">
-          {fmt(frame)} / {fmt(total)}
+          {fmt(frame)} / {fmt(tl.total)}
         </span>
-        <Button onClick={() => player.current?.requestFullscreen()} aria-label={en.player.fullscreen}>
+        <Button onClick={() => void stage.current?.requestFullscreen?.()} aria-label={en.player.fullscreen}>
           <Maximize size={18} aria-hidden="true" /> {en.player.fullscreen}
+        </Button>
+        <Button variant="primary" onClick={() => { stop(); setExporting(true); }}>
+          <Download size={18} aria-hidden="true" /> {en.exportPanel.open}
         </Button>
       </div>
 
       <p className="mt-4 text-sm text-ash">{en.player.tip}</p>
       <ol className="mt-2 flex gap-3 overflow-x-auto pb-3" data-testid="thumbnails">
-        {project.scenes.map((scene, i) => (
+        {tl.scenes.map((scene, i) => (
           <li key={scene.id} className="shrink-0">
             <button
               type="button"
               onClick={() => jump(i)}
               aria-label={en.player.scene(i + 1)}
-              aria-current={i === sceneIndex ? 'true' : undefined}
-              className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === sceneIndex ? 'border-ochre' : 'border-charcoal'}`}
+              aria-current={i === at.index ? 'true' : undefined}
+              className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'}`}
             >
-              <Thumbnail
-                component={LessonVideo}
-                inputProps={inputProps}
-                compositionWidth={size.width}
-                compositionHeight={size.height}
-                durationInFrames={total}
-                frameToDisplay={starts[i] + Math.min(18, sceneFrames(scene) - 1)}
-                fps={FPS}
-                style={{ width: '100%' }}
-              />
-              <span className="block px-2 py-1 text-xs text-ash">
-                {i + 1}. {scene.captions[0]?.text}
+              <SceneSvg project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
+              <span className="block truncate px-2 py-1 text-xs text-ash">
+                {i + 1}. {scene.kind === 'end' ? en.player.endCard : scene.captions[0]?.text}
               </span>
             </button>
           </li>
         ))}
       </ol>
+      {exporting && <ExportPanel project={project} onClose={() => setExporting(false)} />}
     </main>
   );
 }

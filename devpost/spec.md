@@ -13,7 +13,7 @@ The pieces:
 2. **The offline helper (a "service worker"):** on the first visit, it quietly saves all of the app's files into the browser. After that, the app opens and works with Wi-Fi off. That's the "Getting ready for offline… 60%" strip.
 3. **The director:** a plain TypeScript module, our own code with no AI. It reads the lesson text and decides the scenes: which sentence goes in which scene, which motion and face the caveman makes, which drawings and background appear, which words become the caption, and where a gentle sound plays. It uses word lists and rules, so the same text always gives the same video (Shuffle changes the dice).
 4. **The caveman rig:** the caveman is an SVG drawing made of parts (head, body, arms, legs, face) with joints. A motion like "celebrate" is a short list of joint angles over time; a face like "worried" swaps the eyes and mouth. Because every scene draws the same rig from the same saved design, he looks identical everywhere.
-5. **Remotion:** a React library that turns a description of scenes into video frames. The **Player** shows the video in the page, and the **web renderer** turns the same scenes into an MP4 file inside the browser, using the browser's built-in video encoder (WebCodecs). The preview and the file come from the same code, which is how "what plays is exactly what exports" holds.
+5. **The scene renderer (our own code):** each moment of a scene is drawn as one SVG picture: background, drawings, the caveman rig and the caption. On screen, the **player** redraws that picture about 30 times a second. For **Download video**, the very same picture is painted onto a hidden canvas frame by frame, and the browser's built-in video encoder (WebCodecs) turns the frames into an MP4 through **Mediabunny**, a small open-source library. Because the preview and the file are drawn by the same code, "what plays is exactly what exports" holds, and no third-party service is involved.
 6. **The voice engine (Kokoro):** a small open-source speech model (~90 MB) that runs in the browser. It's downloaded once and saved; after that it turns each scene's words into speech offline. "Record my voice" uses the microphone instead.
 7. **The project store (IndexedDB):** the browser's built-in database on this device. Every change auto-saves there: projects, your caveman, settings, recordings and uploaded pictures. **Save project file** packs a project into one `.caveman` file you can move anywhere.
 
@@ -25,9 +25,9 @@ PRD ref: `prd.md > The Core Journey` (J1, J2).
 2. **They type or paste a lesson** (or tap Try an example). The text auto-saves as a draft in `localStorage` on every keystroke, and the word counter updates live.
 3. **They press Make my video.** If no caveman is saved yet, the **Meet your caveman** sheet opens. Their design (or "Cavey") is saved to IndexedDB as **My caveman**.
 4. **The director runs** (`director/`): text is cleaned, split into sentences, grouped into scenes, and each scene gets a motion, face, props, background, caption key word, sound effect and duration. The result is a **Project** object, saved to IndexedDB, with a copy of the caveman design inside it.
-5. **The Player shows it:** Remotion's Player draws each scene from the Project (background → props → caveman rig → captions), frame by frame, in the browser.
+5. **The player shows it:** our player (`PlayerScreen`) draws the current scene's SVG picture (background → props → caveman rig → captions) about 30 times a second while playing.
 6. **Voice (if downloaded):** the voice worker turns each scene's words into a short audio clip with Kokoro, stores it in IndexedDB, and the scene's length becomes the clip's length. The caveman's mouth follows the clip's loudness.
-7. **They tap Download video:** the export panel checks the browser can encode video. Then Remotion's web renderer draws every frame of the same composition into an MP4 (720p or 1080p), adds the end card, and the browser saves `photosynthesis-heycaveman.mp4`.
+7. **They tap Download video:** the export panel checks the browser can encode video. Then `export/renderMp4.ts` paints every frame of the same scene pictures onto a canvas, mixes the sounds, and Mediabunny packs them into an MP4 (720p or 1080p) with the end card. The browser saves `photosynthesis-heycaveman.mp4`.
 8. **J2, offline later:** the service worker serves the app with no network. My videos reads projects back from IndexedDB, and voices come from the browser's saved model files.
 
 ```
@@ -36,19 +36,20 @@ PRD ref: `prd.md > The Core Journey` (J1, J2).
    ▼
  director ──► Project ──► IndexedDB (auto-save)
                  │
-                 ├──► Remotion Player (preview)
+                 ├──► scene SVG ──► our player (preview)
                  ├──► voice worker (Kokoro) ──► audio clips ──► IndexedDB
-                 └──► web renderer ──► MP4 file (Downloads)
+                 └──► scene SVG ──► canvas ──► Mediabunny ──► MP4 file (Downloads)
 ```
 
 ## Stack
 | Piece | Choice | Why | Docs |
 |---|---|---|---|
 | Language | TypeScript 5.x | Your daily stack | https://www.typescriptlang.org/docs/ |
-| UI | React 19 | Your daily stack; Remotion is React | https://react.dev |
+| UI | React 19 | Your daily stack | https://react.dev |
 | Build | Vite 6 | Produces a plain static site; no server needed | https://vite.dev/guide/ |
 | Offline | `vite-plugin-pwa` (Workbox) | Generates the service worker and install manifest | https://vite-pwa-org.netlify.app/ |
-| Video | **Remotion 4** (`remotion`, `@remotion/player`, `@remotion/web-renderer`; pin to one 4.0.x version, ≥ 4.0.491) | **Learner's choice.** Familiar from stickmotion; preview and export share one composition | https://www.remotion.dev/docs/player · https://www.remotion.dev/docs/web-renderer/ |
+| Video drawing | Our own SVG scene renderer (`src/video/SceneSvg.tsx`) | **Learner's choice (revision):** Remotion's exporter sends a usage event to its licensing server on every export, which breaks "nothing leaves the device". Our renderer keeps preview and export identical and fully open | — |
+| MP4 encoding | `mediabunny` 1.61.4 (MPL-2.0) on the browser's WebCodecs | Canvas frames + audio → MP4, all in the browser, no network | https://mediabunny.dev |
 | Voice | `kokoro-js` 1.2.x (Kokoro-82M, q8 ONNX, Apache-2.0) in a Web Worker | Offline neural voices in the browser; ~90 MB once | https://github.com/hexgrad/kokoro/tree/main/kokoro.js |
 | State | zustand 5 (plus a small undo/redo history) | Your daily stack | https://zustand.docs.pmnd.rs |
 | Styling | Tailwind CSS 4 with the cave-paper colours as theme tokens | Your daily stack | https://tailwindcss.com/docs |
@@ -60,7 +61,7 @@ PRD ref: `prd.md > The Core Journey` (J1, J2).
 - **Foundation:** Vite + React + TypeScript instead of Next.js. *Recommended by the agent* (no server is wanted); confirm at review.
 - **Caption font:** Baloo 2 ExtraBold. *Recommended by the agent* to settle the PRD's open question; heavy, rounded, readable from the back of a room. Confirm or swap at review.
 - **Verify early (slice 1):**
-  1. The exact web-renderer API names, and **whether its MP4 output includes audio**.
+  1. That a canvas painted from SVG frames encodes to an H.264 + AAC MP4 with audio in sync.
   2. Output codecs (H.264 + AAC preferred).
   3. Chromebook speed for a 1-minute 720p export.
 
@@ -72,7 +73,7 @@ PRD ref: `prd.md > The Core Journey` (J1, J2).
   1. Open the preview build and paste a lesson; Make; meet the caveman; play.
   2. Tap a scene and change it.
   3. Switch Wi-Fi off live, export the MP4, and play the file.
-- **Submission:** a public GitHub repo with the `LICENSE` (AGPL-3.0, unmodified text so GitHub detects it in About) plus `LICENSE-EXCEPTION.md` (Remotion permission), the art and sounds under CC0 (`assets/LICENSE-ASSETS.md`), the planning docs `devpost/scope.md`, `prd.md` and `spec.md` committed (`learner-profile.md` stays ignored), the README's "Pre-existing work and AI assistance" section, and a YouTube or Vimeo video showing the real app end to end.
+- **Submission:** a public GitHub repo with the `LICENSE` (AGPL-3.0, unmodified text so GitHub detects it in About), the art and sounds under CC0 (`assets/LICENSE-ASSETS.md`), the planning docs `devpost/scope.md`, `prd.md` and `spec.md` committed (`learner-profile.md` stays ignored), the README's "Pre-existing work and AI assistance" section, and a YouTube or Vimeo video showing the real app end to end.
 - **Optional deployment (learner's PRD: official home stoneage.heycaveman.com):** any free static host (Cloudflare Pages, Netlify or GitHub Pages) serving `dist/`. The deploy is `npm run build` plus uploading `dist/`. It's not required for submission; decide in `6-ship`.
 
 ## Look and Feel
@@ -163,14 +164,14 @@ Implements `prd.md > Look and Feel`; nothing re-decided here.
 - **Errors:** "The caveman tripped…" with a Show details link.
 - **PRD ref:** `prd.md > F6`.
 
-### Video composition (Remotion)
-- **Structure:** `src/video/LessonVideo.tsx` is one Remotion composition taking `{ project }`. It uses Remotion's sequences to lay out scenes back to back. Each scene draws its layers in order: `Background` → `Props` (pop-in) → `CavemanRig` → `Captions` (word-art) → `<Audio>` for the voice and sound effects.
+### Video scene renderer (SVG)
+- **Structure:** `src/video/SceneSvg.tsx` draws one scene at one frame as a single `<svg>`: background (colour or setting drawing), props (pop-in and float), the `CavemanRig`, and captions as SVG text with an outline. `src/video/timeline.ts` maps a frame to its scene and local frame. Animation helpers (`spring`) are small pure functions of the frame number.
 - **Size:** shape presets set the size and layout: Wide 1920×1080 / 1280×720, Tall 1080×1920, Square 1080×1080. Tall puts the caveman bigger and centred with phone-safe margins.
-- **Single source:** the same component feeds the Player and the web renderer.
+- **Single source:** the same `SceneSvg` feeds the player, the thumbnails and the MP4 export. For export, drawings and the caption font are embedded as data URIs so the SVG paints on a canvas with no network.
 - **PRD ref:** `prd.md > F5 — Video shape`, `prd.md > F7`, `prd.md > Look and Feel > Inside the video`.
 
 ### Player (F7)
-- **What it does:** wraps `@remotion/player` with our own controls: play/pause, scrub bar with scene markers, scene thumbnails, full screen, and keyboard (Space, ←/→).
+- **What it does:** our own player: a frame clock (requestAnimationFrame) draws `SceneSvg` for the current frame, with play/pause, a scrub bar with scene markers, scene thumbnails (static `SceneSvg`), full screen, and keyboard (Space, ←/→). Sound effects play through Web Audio, scheduled at scene starts.
 - **Toolbar:** shape, Colour mood, Shuffle, Voice, Edit, Download video, Save.
 - **Pause points:** Classroom pause points stop playback at the end of a marked scene in the Player only.
 - **PRD ref:** `prd.md > F7 — Watch (the player)`.
@@ -211,14 +212,11 @@ Implements `prd.md > Look and Feel`; nothing re-decided here.
 - **`ExportPanel`:**
   - Choose quality (720p or 1080p) and the end card.
   - **Capability check:** `VideoEncoder` exists, and `VideoEncoder.isConfigSupported` passes for H.264 at the chosen size. If not, it explains before starting.
-  - **Render:** with `@remotion/web-renderer` to MP4, with progress, time left and Cancel.
+  - **Render:** `export/renderMp4.ts` paints each frame (`SceneSvg` → SVG image → canvas) and encodes H.264 video through Mediabunny's `CanvasSource`, with progress, time left and Cancel.
   - **Hidden tab:** it pauses and resumes on `visibilitychange`.
   - **Out of memory:** a caught error shows "too long for this device".
   - **Done:** the file downloads as `<slug>-heycaveman.mp4`.
-- **Fallback if the web renderer can't include audio** (to be checked in slice 1):
-  1. Render the video track with the web renderer.
-  2. Mix the voice and sound effects with `OfflineAudioContext`.
-  3. Mux both into the MP4 with Mediabunny, which the web renderer already uses (MPL-2.0).
+- **Audio:** `export/audioMix.ts` mixes the sound effects (and later voices) with an `OfflineAudioContext` into one buffer, encoded as AAC through Mediabunny's `AudioBufferSource` in the same MP4.
 - **PRD ref:** `prd.md > F13 — Download video (export)`.
 
 ### My videos and files (F14)
@@ -307,7 +305,7 @@ app/
 │   ├── director/            # clean, split, group, act, props, setting, caption, sfx, timing,
 │   │                        # structure, lessonBuilder, random (seeded), index (direct())
 │   ├── caveman/             # CavemanRig.tsx, skeleton, motions, expressions, presets
-│   ├── video/               # LessonVideo.tsx (Remotion composition), scenes/, moods.ts, contrast.ts, wordArt
+│   ├── video/               # SceneSvg.tsx (one scene at one frame), timeline.ts, spring.ts, moods.ts, contrast.ts
 │   ├── voice/               # kokoroWorker.ts, voiceClient.ts, recorder.ts, envelope.ts
 │   ├── export/              # capability.ts, renderMp4.ts, audioMix.ts (fallback)
 │   ├── store/               # zustand stores (project, ui, settings), history (undo), autosave
@@ -320,9 +318,8 @@ app/
 │   └── e2e/                 # Playwright: first visit, offline reload, make, edit, export
 ├── devpost/                 # Devpost learning workspace
 ├── LICENSE                  # AGPL-3.0 (unmodified text)
-├── LICENSE-EXCEPTION.md     # additional permission: combine with Remotion
 ├── scripts/check-public.mjs # pre-commit scan: secrets, local paths, emails, private keywords
-├── README.md                # run, offline test, Remotion licence note, asset disclosure
+├── README.md                # run, offline test, asset disclosure
 ├── index.html · vite.config.ts · tailwind/postcss config · tsconfig.json · package.json
 ```
 
@@ -331,8 +328,7 @@ There are **no runtime services.** The app makes no network calls after the firs
 - **Voice model download:** `kokoro-js` fetches `onnx-community/Kokoro-82M-v1.0-ONNX` (q8) from the Hugging Face CDN on first use. It's free, needs no key, and the weights are Apache-2.0. Docs: https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX
   - **The only external request in the app.** Shown with its size before downloading. PRD principle 2 lists it as the documented exception.
   - **Self-hosting:** schools can host the model files themselves through a config value, `VOICE_MODEL_BASE`.
-- **Remotion licence:** source-available, not OSI open source. It's free for individuals, for-profit companies with up to 3 employees, and non-profits; others need a Company License. https://github.com/remotion-dev/remotion/blob/main/LICENSE.md
-  - **What the README says:** our code is AGPL-3.0, but Remotion is a separately licensed dependency, and large for-profit organizations that self-host or fork may need a Remotion licence.
+- **No video service or tracking library:** Remotion was dropped during the build because its exporter reports every render to its licensing server. The app has no analytics or usage pings of any kind.
 - **Hosting (optional):** any free static host serving `dist/`.
 
 ## Important Failure Modes
@@ -349,10 +345,10 @@ There are **no runtime services.** The app makes no network calls after the firs
 ## Decisions and Open Issues
 
 ### Learner decisions (this spec)
-- **Rendering and MP4 export use Remotion** (Player + web renderer), not a custom renderer. Familiar from stickmotion. *Tradeoff accepted:* Remotion is source-available rather than open source; free for HeyCaveman at ≤ 3 employees, with a README note for large self-hosters.
+- **Rendering and MP4 export use our own SVG renderer plus Mediabunny** (revision during slice 2; originally Remotion). *Why:* `@remotion/web-renderer` sends a usage event (site address, success) to remotion.pro on every export, even with the free licence, which breaks the PRD's "nothing leaves the device" and "zero requests to other domains". *Tradeoff accepted:* about one extra slice of work. In return, the preview and export stay identical and the whole stack is OSI open source.
 - **Assets are copied from the learner's stickmotion project** (the SVG drawings, and sound effects if suitable ones exist there). They were AI-generated with Claude on the learner's account and are released here as CC0. *Must be disclosed* in the Devpost submission as pre-existing, AI-assisted assets; no stickmotion code is copied.
 - **Spell out the three unknowns** (below) in the spec, to serve the learning goal of specifying every feature before building.
-- **Licence: AGPL-3.0 with an additional permission for Remotion** (learner accepted the agent's recommendation after a jury-style eligibility review). The `LICENSE` file is the unmodified AGPL-3.0 text, so GitHub detects it in About. A separate `LICENSE-EXCEPTION.md` grants one additional permission under AGPL section 7: "you may combine this program with Remotion and distribute the result, with Remotion under its own licence." This removes the AGPL-vs-non-OSI-dependency wrinkle. Art and sounds are CC0 (`assets/LICENSE-ASSETS.md`).
+- **Licence: AGPL-3.0** (unmodified text, so GitHub detects it). The Remotion exception is no longer needed now that Remotion is gone. Art and sounds are CC0 (`assets/LICENSE-ASSETS.md`).
 - **Disclosure of pre-existing work** (hackathon rule: "must disclose any other pre-existing code or work incorporated"). The SVG drawings (and any sounds) are copied from the learner's earlier HeyCaveman work. They were AI-assisted and created Oct 5–13 2026, inside the submission period. **No earlier code is reused.** This is stated in three places: the Devpost text description (written by the learner), the README's "Pre-existing work and AI assistance" section, and `assets/LICENSE-ASSETS.md`.
 - **Business details kept generic in public docs:** "a launch discount code" instead of the actual code, and no revenue targets (learner delegated this; it doesn't affect eligibility).
 - **Public-safety check:** `npm run check:public` scans staged files before every commit. It looks for key and token patterns, private-key headers, absolute local paths, email addresses and a private keyword list. The keyword list lives in a gitignored `.check-public.local`, so the list itself is never published. `6-ship` re-runs it over the full git history before the repo goes public.
@@ -369,8 +365,8 @@ There are **no runtime services.** The app makes no network calls after the firs
    - **Determinism:** the same sentence always gives the same choice, because a "dice" seeded from the text breaks ties.
    - **How we'll know:** golden tests run every template example and check each scene's plan. The ≥ 70% relevant-prop check (PRD F6) is measured by a script counting scenes with a tag match.
 2. **How MP4 export works in the browser.**
-   - **How it works:** Remotion's web renderer plays the composition frame by frame off-screen, draws each frame, and hands it to the browser's built-in video encoder (WebCodecs). Mediabunny packs the encoded frames (and audio) into an MP4 file, which the browser then downloads. No server is involved.
-   - **To verify in build slice 1** (a small investigation):
+   - **How it works:** our exporter steps through every frame, draws the same SVG scene picture the player shows onto a hidden canvas, and hands each canvas frame to the browser's built-in video encoder (WebCodecs). The sounds are mixed into one audio track, and Mediabunny packs video and audio into an MP4 that the browser downloads. No server is involved.
+   - **To verify in build slice 2** (a small investigation):
      1. Render a 10 s, 2-scene test with voice and a sound effect.
      2. Confirm the MP4 has audio in sync and plays in VLC and Windows Photos.
      3. Time a 1-minute 720p export.
@@ -385,7 +381,7 @@ There are **no runtime services.** The app makes no network calls after the firs
 ### Open issues
 - **Sound effects source:** are 10 suitable sound effects in stickmotion? `media/audio` holds 228 WAV files with hashed names, which look like generated voices. If there aren't any, make 10 gentle effects with a small script (Web Audio synthesis, rendered to WAV) as fresh CC0 work. *Must be decided before M2;* doesn't block M1.
 - **Asset kid-safety and tagging:** copied drawings need a kid-safe review and tags/synonyms in `manifest.json` (PRD > Privacy and child safety). About 112 SVGs exist versus the PRD's ~280 target. *Can wait:* M1 ships with the reviewed subset, and the library grows in M4.
-- **Web renderer audio and codecs:** unverified, so build slice 1 checks them.
+- **MP4 audio and codecs (our exporter):** verified in slice 2 by probing the exported file.
 - **Kokoro voice list and speed on Chromebooks:** unverified, checked early in M3.
 - **Premium import page** (`heycaveman.com/import`) must exist for M5's handoff. Carried over from `prd.md > Open Questions`; M5 is last.
 - **Self-review notes:**

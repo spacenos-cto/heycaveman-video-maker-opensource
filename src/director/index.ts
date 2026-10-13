@@ -7,6 +7,7 @@ import { clean, countWords } from './clean';
 import { chooseProps, rankAssets, PROP_ASSETS } from './props';
 import { hashText, seededRandom } from './random';
 import { chooseBackground } from './setting';
+import { chooseSfx } from './sfx';
 import { split } from './split';
 import { group } from './group';
 import { sceneDuration } from './timing';
@@ -39,6 +40,7 @@ export function direct(text: string, options: DirectOptions): { scenes: Scene[];
       expression: acting.expression,
       background: chooseBackground(words, previous?.background, options.mood, rnd),
       props,
+      sfx: chooseSfx({ words, props }, i),
       durationMs: sceneDuration(words, options.readingSpeed),
       voice: { type: 'none' },
     });
