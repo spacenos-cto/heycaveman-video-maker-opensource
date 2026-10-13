@@ -1,7 +1,7 @@
 // Watch the video (devpost/prd.md > F7). Our own player: a frame clock draws the current scene's SVG
 // about 30 times a second, sounds play through Web Audio, and the same SVG becomes the MP4 on export.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Download, Maximize, Pause, Play } from 'lucide-react';
+import { ArrowLeft, Download, Maximize, Pause, Play, Save } from 'lucide-react';
 import { playSfxFrom } from '../audio/sounds';
 import { en } from '../i18n/en';
 import { useApp } from '../store/app';
@@ -18,7 +18,7 @@ const fmt = (frames: number) => {
 let sharedAudio: AudioContext | null = null;
 
 export function PlayerScreen() {
-  const { project, go } = useApp();
+  const { project, go, saveProjectFile } = useApp();
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -151,6 +151,9 @@ export function PlayerScreen() {
         </span>
         <Button onClick={() => void stage.current?.requestFullscreen?.()} aria-label={en.player.fullscreen}>
           <Maximize size={18} aria-hidden="true" /> {en.player.fullscreen}
+        </Button>
+        <Button onClick={() => project && saveProjectFile(project)}>
+          <Save size={18} aria-hidden="true" /> {en.saveProjectFile}
         </Button>
         <Button variant="primary" onClick={() => { stop(); setExporting(true); }}>
           <Download size={18} aria-hidden="true" /> {en.exportPanel.open}

@@ -34,7 +34,7 @@ test('exports an H.264 MP4 with an audio track and the end card, offline in the 
   expect(download.suggestedFilename()).toMatch(/-heycaveman\.mp4$/);
   const file = info.outputPath(download.suggestedFilename());
   await download.saveAs(file);
-  await expect(page.getByRole('status')).toContainText('Saved');
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('Saved');
 
   const meta = probe(file);
   const videoTrack = meta.streams.find((s) => s.codec_type === 'video');

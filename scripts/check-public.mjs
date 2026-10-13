@@ -49,7 +49,9 @@ for (const { path, read } of sources()) {
   text.split(/\r?\n/).forEach((line, i) => {
     for (const [name, re] of RULES) {
       const m = line.match(re);
-      if (m && !(name === 'email address' && EMAIL_OK.test(m[0]))) problems.push(`${path}:${i + 1}  ${name}: ${m[0]}`);
+      // Lock files carry public npm package metadata (authors' emails); only emails are skipped there.
+      const lockFile = /(^|\/)(package-lock\.json|npm-shrinkwrap\.json)( |$)/.test(path);
+      if (m && !(name === 'email address' && (EMAIL_OK.test(m[0]) || lockFile))) problems.push(`${path}:${i + 1}  ${name}: ${m[0]}`);
     }
     const low = line.toLowerCase();
     for (const k of keywords) if (low.includes(k)) problems.push(`${path}:${i + 1}  private keyword: "${k}"`);

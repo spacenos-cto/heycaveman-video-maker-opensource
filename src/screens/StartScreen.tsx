@@ -12,7 +12,8 @@ const WARN_WORDS = 1500;
 const MAX_WORDS = 3000;
 
 export function StartScreen() {
-  const { draft, setDraft, go } = useApp();
+  const { draft, setDraft, go, projects, openProject } = useApp();
+  const recent = projects.find((p) => !p.deletedAt);
   const [note, setNote] = useState<string | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const words = countWords(draft);
@@ -44,6 +45,11 @@ export function StartScreen() {
 
   return (
     <main className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-8 sm:pt-14">
+      {recent && (
+        <button type="button" onClick={() => void openProject(recent.id)} className="mb-5 inline-flex max-w-full items-center gap-2 truncate rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold" data-testid="continue-chip">
+          ▶ {en.continueChip(recent.title)}
+        </button>
+      )}
       <h1 className="font-display text-[30px] font-bold leading-tight sm:text-[46px]">
         {en.headline.before}
         <span className="relative inline-block">

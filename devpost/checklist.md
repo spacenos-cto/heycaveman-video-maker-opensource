@@ -50,7 +50,7 @@ Build mode: fast
   Learner check: Make a video, press Download video, Standard, Start. Open the downloaded file in VLC or Windows Photos: does it look and sound exactly like the player, and does the end card appear?
   Commit: `Export MP4 with sound effects and end card in the browser`
 
-- [ ] **3. It works offline and remembers your work**
+- [x] **3. It works offline and remembers your work**
   Becomes usable:
     - The app installs, shows "Getting ready for offline… N%" then "✓ Works offline", and works with Wi-Fi off.
     - The draft and every project auto-save on the device.
@@ -196,3 +196,4 @@ Activity mode:
 
 - Replaced Remotion (player and web renderer) with our own SVG scene renderer plus Mediabunny for MP4 export (learner chose this in slice 2). The build found that `@remotion/web-renderer` sends a usage event (site address, success) to remotion.pro on every export, even with the free licence, which breaks the PRD's "nothing leaves the device" promise and its "zero requests to other domains" check. The AGPL Remotion exception was dropped with it. Slice 1's director, rig and design are unchanged.
 - Slice 2 measurements: the exported MP4 is H.264 1280×720 with AAC 48 kHz stereo. The first sound effect starts at 0.150 s (planned 0.15 s) and the "Remember" ding at 4.150 s (scene start + 0.35 s). The export made zero requests to other domains. Speed on the build PC (headless Chromium): an 84 s video exported in 91 s, about 1.1× real time. The PRD budget (1 min in under 2 min on a Chromebook) needs re-checking on slower hardware; frame painting is the cost to optimise if needed.
+- The offline helper is our own small service worker (`src/offline/sw.ts`). `vite-plugin-pwa` only injects the file list and writes the install manifest, because Workbox's built-in precaching can't report the per-file progress behind the PRD's "Getting ready for offline… N%" strip. The first download is 94 files, 4.95 MB, well inside the PRD's 15 MB budget. The `.woff` font fallbacks are left out, since every supported browser uses `.woff2`.

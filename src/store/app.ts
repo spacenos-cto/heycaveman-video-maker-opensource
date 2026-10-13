@@ -1,12 +1,17 @@
-// App state: which screen is showing, the draft lesson and the open project.
-// Draft text lives in localStorage so it survives leaving and coming back (devpost/spec.md > Data Model).
+// App state: which screen is showing, the draft lesson and the open project. Every project change is
+// auto-saved on this device a moment later; there is no "unsaved" state (devpost/prd.md > F14).
 import { create } from 'zustand';
 import { CAVEY } from '../caveman/presets';
+import { useOffline } from '../offline/status';
+import { storage, storageBlocked } from '../storage/db';
+import { packProject, projectFileName, unpackProject } from '../storage/projectFile';
+import { claimProject, releaseProject } from '../storage/tabs';
 import type { Project } from '../types';
 
-export type Screen = 'start' | 'making' | 'player';
+export type Screen = 'start' | 'making' | 'player' | 'videos';
 
 const DRAFT_KEY = 'stoneage.draft';
+const AUTOSAVE_MS = 300;
 
 function readDraft(): string {
   try {
@@ -20,15 +25,60 @@ type AppState = {
   screen: Screen;
   draft: string;
   project: Project | null;
+  readOnly: boolean;
+  projects: Project[]; // My videos, newest first (includes recently deleted)
+  notice: string | null; // one-time notes such as the first-save warning
   setDraft: (text: string) => void;
   go: (screen: Screen) => void;
+  /** Replace the open project (auto-saved). */
   setProject: (project: Project | null) => void;
+  openProject: (id: string) => Promise<void>;
+  refreshProjects: () => Promise<void>;
+  renameProject: (id: string, title: string) => Promise<void>;
+  duplicateProject: (id: string) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  restoreProject: (id: string) => Promise<void>;
+  saveProjectFile: (project: Project) => void;
+  openProjectFile: (file: File) => Promise<{ newer: boolean }>;
+  dismissNotice: () => void;
 };
 
-export const useApp = create<AppState>((set) => ({
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+async function persist(project: Project) {
+  const db = await storage();
+  await db.putProject(project);
+  useOffline.setState({ storageBlocked });
+}
+
+async function firstSaveNotice(set: (s: Partial<AppState>) => void) {
+  const db = await storage();
+  const seen = (await db.getSetting<Record<string, true>>('seenTips')) ?? {};
+  if (seen.firstSave) return;
+  set({ notice: 'Videos are saved in this browser only. Clearing browser data removes them — use Save project file to keep a copy.' });
+  await db.putSetting('seenTips', { ...seen, firstSave: true });
+}
+
+const newId = () => `p${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`;
+
+function download(bytes: Uint8Array, name: string, type: string) {
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+export const useApp = create<AppState>((set, get) => ({
   screen: 'start',
   draft: readDraft(),
   project: null,
+  readOnly: false,
+  projects: [],
+  notice: null,
   setDraft: (draft) => {
     try {
       localStorage.setItem(DRAFT_KEY, draft);
@@ -37,8 +87,87 @@ export const useApp = create<AppState>((set) => ({
     }
     set({ draft });
   },
-  go: (screen) => set({ screen }),
-  setProject: (project) => set({ project }),
+  go: (screen) => {
+    if (screen !== 'player') {
+      releaseProject();
+      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    }
+    set({ screen });
+    if (screen === 'videos') void get().refreshProjects();
+  },
+  setProject: (project) => {
+    const isNew = project && project.id !== get().project?.id;
+    set({ project });
+    if (!project) return;
+    if (isNew) {
+      if (location.hash !== `#project=${project.id}`) history.replaceState(null, '', `#project=${project.id}`);
+      void claimProject(project.id).then((busy) => {
+        set({ readOnly: busy });
+        useOffline.setState({ otherTab: busy });
+      });
+      void firstSaveNotice(set);
+    }
+    if (get().readOnly) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => void persist({ ...project, updatedAt: Date.now() }), AUTOSAVE_MS);
+  },
+  openProject: async (id) => {
+    const db = await storage();
+    const p = await db.getProject(id);
+    if (!p || p.deletedAt) return;
+    get().setProject(p);
+    set({ screen: 'player' });
+  },
+  refreshProjects: async () => {
+    const db = await storage();
+    const all = await db.allProjects();
+    all.sort((a, b) => b.updatedAt - a.updatedAt);
+    set({ projects: all });
+    useOffline.setState({ storageBlocked });
+  },
+  renameProject: async (id, title) => {
+    const db = await storage();
+    const p = await db.getProject(id);
+    if (!p || !title.trim()) return;
+    await db.putProject({ ...p, title: title.trim(), updatedAt: Date.now() });
+    if (get().project?.id === id) set({ project: { ...get().project!, title: title.trim() } });
+    await get().refreshProjects();
+  },
+  duplicateProject: async (id) => {
+    const db = await storage();
+    const p = await db.getProject(id);
+    if (!p) return;
+    const now = Date.now();
+    await db.putProject({ ...structuredClone(p), id: newId(), title: `${p.title} (copy)`, createdAt: now, updatedAt: now, deletedAt: undefined });
+    await get().refreshProjects();
+  },
+  deleteProject: async (id) => {
+    const db = await storage();
+    const p = await db.getProject(id);
+    if (!p) return;
+    await db.putProject({ ...p, deletedAt: Date.now() });
+    await get().refreshProjects();
+  },
+  restoreProject: async (id) => {
+    const db = await storage();
+    const p = await db.getProject(id);
+    if (!p) return;
+    await db.putProject({ ...p, deletedAt: undefined, updatedAt: Date.now() });
+    await get().refreshProjects();
+  },
+  saveProjectFile: (project) => download(packProject(project), projectFileName(project.title), 'application/zip'),
+  openProjectFile: async (file) => {
+    const { project, newer } = unpackProject(new Uint8Array(await file.arrayBuffer()));
+    const db = await storage();
+    // Opening someone else's copy of a project you already have makes a separate copy, never overwrites.
+    const existing = await db.getProject(project.id);
+    const p = existing ? { ...project, id: newId(), updatedAt: Date.now() } : { ...project, updatedAt: Date.now() };
+    await db.putProject(p);
+    get().setProject(p);
+    set({ screen: 'player' });
+    return { newer };
+  },
+  dismissNotice: () => set({ notice: null }),
 }));
 
 export const DEFAULTS = { shape: 'wide' as const, mood: 'bright' as const, caveman: CAVEY, readingSpeed: 'normal' as const };
