@@ -9,6 +9,8 @@ import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import type { Project } from '../types';
 import { Button } from '../ui/Button';
+import { useVoice } from '../voice/voiceStore';
+import { staleScenes } from '../voice/voicing';
 
 type Phase = 'choose' | 'unsupported' | 'working' | 'done' | 'failed';
 
@@ -122,9 +124,19 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
                 <span className="block text-sm text-ash">{en.exportPanel.endCardHint}</span>
               </span>
             </label>
-            <Button variant="primary" className="mt-6 w-full py-3 text-lg" onClick={() => void start()}>
-              {en.exportPanel.start}
-            </Button>
+            {staleScenes(project).length > 0 ? (
+              <div className="mt-6 rounded-[12px] border-2 border-ochre p-3" role="alert">
+                <p>{en.voice.staleExport}</p>
+                <div className="mt-3 flex gap-2">
+                  <Button variant="primary" onClick={() => void useVoice.getState().voiceOpenProject(project.voiceId ?? 'af_heart', project.voiceSpeed ?? 'normal')}>{en.voice.update}</Button>
+                  <Button onClick={() => void start()}>{en.voice.exportAnyway}</Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="primary" className="mt-6 w-full py-3 text-lg" onClick={() => void start()}>
+                {en.exportPanel.start}
+              </Button>
+            )}
           </>
         )}
 

@@ -24,12 +24,17 @@ type Backend = {
   allProjects(): Promise<Project[]>;
   getSetting<T>(key: string): Promise<T | undefined>;
   putSetting(key: string, value: unknown): Promise<void>;
+  getBlob(id: string): Promise<Blob | undefined>;
+  putBlob(id: string, blob: Blob): Promise<void>;
 };
 
 function memoryBackend(): Backend {
   const projects = new Map<string, Project>();
   const settings = new Map<string, unknown>();
+  const blobs = new Map<string, Blob>();
   return {
+    getBlob: async (id) => blobs.get(id),
+    putBlob: async (id, blob) => void blobs.set(id, blob),
     getProject: async (id) => structuredClone(projects.get(id)),
     putProject: async (p) => void projects.set(p.id, structuredClone(p)),
     deleteProject: async (id) => void projects.delete(id),
@@ -47,6 +52,8 @@ function idbBackend(db: IDBPDatabase<StoneAgeDB>): Backend {
     allProjects: () => db.getAll('projects'),
     getSetting: async <T,>(key: string) => (await db.get('settings', key)) as T | undefined,
     putSetting: async (key, value) => void (await db.put('settings', value, key)),
+    getBlob: async (id) => (await db.get('blobs', id))?.blob,
+    putBlob: async (id, blob) => void (await db.put('blobs', { id, blob })),
   };
 }
 

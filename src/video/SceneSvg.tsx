@@ -170,7 +170,14 @@ export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, 
           })}
           {!scene.hideCaveman && (
             <g transform={`translate(${cx - rigW / 2} ${feet - rigH}) scale(${rigH / 320})`}>
-              <CavemanRig design={project.caveman} motion={scene.motion} expression={scene.expression} frame={frame} blinkSeed={index} />
+              <CavemanRig
+                design={project.caveman}
+                motion={scene.motion}
+                expression={scene.expression}
+                frame={frame}
+                blinkSeed={index}
+                mouthOpen={scene.voice.envelope ? (scene.voice.envelope[frame] ?? 0) : undefined}
+              />
             </g>
           )}
           {scene.captions.map((c, i) => (

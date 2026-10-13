@@ -57,3 +57,12 @@ describe('storage when the browser blocks it (prd.md > F1)', () => {
     expect((await db.allProjects()).map((p) => p.id).sort()).toEqual(['live', 'recent']);
   });
 });
+
+describe('voice clips travel inside project files (prd.md > F14 rule 2)', () => {
+  it('packs and unpacks audio clips with the project', () => {
+    const p = make();
+    const clip = new Uint8Array([82, 73, 70, 70, 1, 2, 3]);
+    const { audio } = unpackProject(packProject(p, { 'p1:s1:builtin:x': clip }));
+    expect([...audio['p1:s1:builtin:x']]).toEqual([...clip]);
+  });
+});

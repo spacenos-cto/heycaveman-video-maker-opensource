@@ -4,6 +4,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AudioBufferSource, BufferTarget, CanvasSource, Mp4OutputFormat, Output, QUALITY_HIGH, QUALITY_MEDIUM } from 'mediabunny';
+import { hasVoices } from '../audio/sounds';
 import { assetById } from '../director/props';
 import type { Project } from '../types';
 import { SceneSvg } from '../video/SceneSvg';
@@ -71,7 +72,7 @@ export async function renderMp4(
   const video = new CanvasSource(canvas, { codec: 'avc', quality: options.quality === '1080p' ? QUALITY_HIGH : QUALITY_MEDIUM, keyFrameInterval: 2 });
   output.addVideoTrack(video, { frameRate: FPS });
   let audio: AudioBufferSource | null = null;
-  if (capability.audio && project.sfxLevel !== 'off') {
+  if (capability.audio && (project.sfxLevel !== 'off' || hasVoices(project))) {
     audio = new AudioBufferSource({ codec: capability.audio, quality: QUALITY_MEDIUM });
     output.addAudioTrack(audio);
   }

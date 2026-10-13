@@ -73,7 +73,52 @@ Build mode: fast
   Learner check: Run `npm run build` then `npm run preview`, open http://localhost:4173, and wait for "Works offline". Turn Wi-Fi off, reload, make a video and download it. Close the browser, reopen it: is your video in My videos?
   Commit: `Work fully offline with auto-saved projects and project files`
 
-- [ ] **4. Meet your caveman, and choose the shape and colour mood**
+- [x] **4. Give the caveman a voice**
+  Becomes usable:
+    - Caveman voices: a one-time ~90 MB download with progress and resume, then offline voicing, voice choice and speed, hear sample, and mouth movement from loudness.
+    - Record my voice: teleprompter, countdown, level meter, playback, re-record, silence check, 60 s limit.
+    - No voice.
+    - Mixed voices per scene, and "Voice out of date — redo" after edits.
+    - Voiced MP4 export.
+  Why now: Moved up from slice 7 after the first hands-on checkpoint: the learner found the video missing a voice, which matters most for the demo. It's a heavy download and a separate risk (`spec.md > Decisions and Open Issues`, unknown 3), and it plugs into the scenes and export that now exist. Scene editing (later) marks voices out of date.
+  PRD ref: `prd.md > F10 — Voice`, `prd.md > F13 — Download video (export)` (voices out of date)
+  Spec ref: `spec.md > Voice (F10)`, `spec.md > The caveman rig` (lip-sync), `spec.md > External Services and Dependencies`, `spec.md > Important Failure Modes`
+  Build: `kokoroWorker.ts` and `voiceClient.ts` (q8, WASM or WebGPU), the device capability check, clips and loudness envelopes stored in IndexedDB, scene timing from voice duration, `recorder.ts`, the Voice panel, stale flags, and the export "update voices first?" prompt.
+  Verify (mechanical):
+    - Record the voice list, download size and seconds per scene in Revisions.
+    - Playwright: with the model loaded, go offline, make a 3-scene video, confirm each scene has an audio blob and its duration matches, and export, confirming an MP4 audio track. A recording with fake microphone input is kept, and a silent one is rejected.
+  Learner check: Download the voices, pick one, and make a video. Then record your own voice for one scene. Does his mouth move with the voice, and does the downloaded MP4 have both voices?
+  Commit: `Add offline caveman voices and voice recording`
+
+- [ ] **5. Tap a scene to change it, with undo**
+  Becomes usable: Tapping a thumbnail opens the scene panel to change words, caption and style, caveman action and face, background, props, and sound, and to duplicate, delete, move or add a scene. Every change shows instantly, and undo/redo keeps at least 50 steps. The Re-make prompt protects scene edits.
+  Why now: Completes the core loop's "watch and tweak" step. It needs scenes, moods and shapes in place first.
+  PRD ref: `prd.md > F8 — Quick scene edits (tap a scene)`, `prd.md > F6 — Make (the offline director)` (Re-make prompt)
+  Spec ref: `spec.md > Scene panel and undo (F8)`, `spec.md > Data Model`
+  Build: `ScenePanel` (side panel or bottom sheet), animated motion and face chips, the history stack in the store with Ctrl+Z / Ctrl+Y, the scene actions with the PRD's guards, and the Re-make confirm.
+  Verify (mechanical):
+    - Vitest: 50 edits followed by 50 undos gives back the original project, and deleting the only scene is blocked.
+    - Playwright: change one scene's prop, caption and motion, and confirm the Player frame updates and the change survives a reload.
+  Learner check: Make a video, tap scene 2, change his action to "celebrate", swap a prop, and edit the caption. Try undo. Could a teacher do it in under 30 seconds?
+  Commit: `Add quick scene editing with undo and redo`
+
+- [ ] **6. The Editor for hand-made scenes**
+  Becomes usable:
+    - The Editor: a scene list with drag-to-reorder and durations.
+    - The stage: drag, resize and rotate props and the caveman with snap guides, and when each prop appears and disappears.
+    - A searchable prop library, multiple captions per scene with timing, and the character designer.
+    - Uploads of your own pictures (resized, 5 MB limit), kept in the project file.
+  Why now: M4 power-user control. It depends on everything before it and isn't needed for the core loop, so it comes late.
+  PRD ref: `prd.md > F9 — Editor (more control)`
+  Spec ref: `spec.md > Editor (F9)`, `spec.md > Data Model`
+  Build: `Editor/` (SceneList, Stage overlay with pointer handles in percentages, PropLibrary search over the manifest, CaptionTrack), upload resize to IndexedDB blobs, and uploads included in `.caveman` files.
+  Verify (mechanical):
+    - Vitest: placement percentages survive a shape switch inside the frame, and a `.caveman` file with uploads round-trips.
+    - Playwright: build a 3-scene video from scratch (set backgrounds, add props, write captions) and play it.
+  Learner check: Open Edit, drag a prop, resize it, search "lungs" in the library, and upload one of your own pictures. Does it feel intuitive?
+  Commit: `Add the editor with stage, prop library and picture upload`
+
+- [ ] **7. Meet your caveman, and choose the shape and colour mood**
   Becomes usable:
     - The first Make shows the Meet your caveman sheet: 4 presets, Customise with the Cartoon style (clothes, hair, glasses, facial hair, skin tone, colours, head size, name) and a live waving preview. It's saved as My caveman, with each project keeping its own copy.
     - Wide, Tall and Square work on Start and in the Player.
@@ -88,7 +133,7 @@ Build mode: fast
   Learner check: Clear the site data, press Make, and design your own caveman. Is he identical in every scene? Switch to Tall and Earthy: does it still look right?
   Commit: `Add caveman designer, video shapes and colour moods`
 
-- [ ] **5. Teacher tools: Lesson Builder, templates and lesson scenes**
+- [ ] **8. Teacher tools: Lesson Builder, templates and lesson scenes**
   Becomes usable:
     - The Start from a topic Lesson Builder, with Turn into text.
     - The 6 templates, with grey examples.
@@ -106,51 +151,6 @@ Build mode: fast
     - A quiz without an answer shows "Discuss!".
   Learner check: Pick the "Explain a concept" template, fill in only the topic and two points, and make it. Do the title card, quiz and recap work the way you'd use them in class?
   Commit: `Add Lesson Builder, templates and quiz, recap and title scenes`
-
-- [ ] **6. Tap a scene to change it, with undo**
-  Becomes usable: Tapping a thumbnail opens the scene panel to change words, caption and style, caveman action and face, background, props, and sound, and to duplicate, delete, move or add a scene. Every change shows instantly, and undo/redo keeps at least 50 steps. The Re-make prompt protects scene edits.
-  Why now: Completes the core loop's "watch and tweak" step. It needs scenes, moods and shapes in place first.
-  PRD ref: `prd.md > F8 — Quick scene edits (tap a scene)`, `prd.md > F6 — Make (the offline director)` (Re-make prompt)
-  Spec ref: `spec.md > Scene panel and undo (F8)`, `spec.md > Data Model`
-  Build: `ScenePanel` (side panel or bottom sheet), animated motion and face chips, the history stack in the store with Ctrl+Z / Ctrl+Y, the scene actions with the PRD's guards, and the Re-make confirm.
-  Verify (mechanical):
-    - Vitest: 50 edits followed by 50 undos gives back the original project, and deleting the only scene is blocked.
-    - Playwright: change one scene's prop, caption and motion, and confirm the Player frame updates and the change survives a reload.
-  Learner check: Make a video, tap scene 2, change his action to "celebrate", swap a prop, and edit the caption. Try undo. Could a teacher do it in under 30 seconds?
-  Commit: `Add quick scene editing with undo and redo`
-
-- [ ] **7. Give the caveman a voice**
-  Becomes usable:
-    - Caveman voices: a one-time ~90 MB download with progress and resume, then offline voicing, voice choice and speed, hear sample, and mouth movement from loudness.
-    - Record my voice: teleprompter, countdown, level meter, playback, re-record, silence check, 60 s limit.
-    - No voice.
-    - Mixed voices per scene, and "Voice out of date — redo" after edits.
-    - Voiced MP4 export.
-  Why now: M3. It's a heavy download and a separate risk (`spec.md > Decisions and Open Issues`, unknown 3). It plugs into the scenes, editing and export that now exist.
-  PRD ref: `prd.md > F10 — Voice`, `prd.md > F13 — Download video (export)` (voices out of date)
-  Spec ref: `spec.md > Voice (F10)`, `spec.md > The caveman rig` (lip-sync), `spec.md > External Services and Dependencies`, `spec.md > Important Failure Modes`
-  Build: `kokoroWorker.ts` and `voiceClient.ts` (q8, WASM or WebGPU), the device capability check, clips and loudness envelopes stored in IndexedDB, scene timing from voice duration, `recorder.ts`, the Voice panel, stale flags, and the export "update voices first?" prompt.
-  Verify (mechanical):
-    - Record the voice list, download size and seconds per scene in Revisions.
-    - Playwright: with the model loaded, go offline, make a 3-scene video, confirm each scene has an audio blob and its duration matches, and export, confirming an MP4 audio track. A recording with fake microphone input is kept, and a silent one is rejected.
-  Learner check: Download the voices, pick one, and make a video. Then record your own voice for one scene. Does his mouth move with the voice, and does the downloaded MP4 have both voices?
-  Commit: `Add offline caveman voices and voice recording`
-
-- [ ] **8. The Editor for hand-made scenes**
-  Becomes usable:
-    - The Editor: a scene list with drag-to-reorder and durations.
-    - The stage: drag, resize and rotate props and the caveman with snap guides, and when each prop appears and disappears.
-    - A searchable prop library, multiple captions per scene with timing, and the character designer.
-    - Uploads of your own pictures (resized, 5 MB limit), kept in the project file.
-  Why now: M4 power-user control. It depends on everything before it and isn't needed for the core loop, so it comes late.
-  PRD ref: `prd.md > F9 — Editor (more control)`
-  Spec ref: `spec.md > Editor (F9)`, `spec.md > Data Model`
-  Build: `Editor/` (SceneList, Stage overlay with pointer handles in percentages, PropLibrary search over the manifest, CaptionTrack), upload resize to IndexedDB blobs, and uploads included in `.caveman` files.
-  Verify (mechanical):
-    - Vitest: placement percentages survive a shape switch inside the frame, and a `.caveman` file with uploads round-trips.
-    - Playwright: build a 3-scene video from scratch (set backgrounds, add props, write captions) and play it.
-  Learner check: Open Edit, drag a prop, resize it, search "lungs" in the library, and upload one of your own pictures. Does it feel intuitive?
-  Commit: `Add the editor with stage, prop library and picture upload`
 
 - [ ] **9. Classroom-ready and open-source ready, plus the HeyCaveman bridge**
   Becomes usable:
@@ -173,7 +173,7 @@ Build mode: fast
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 3 (make, export, offline end to end); feedback can still shape slices 4–9
+- [x] Early usable behavior explored — after slice 3 (make, export, offline end to end); feedback can still shape slices 4–9. Learner tried the build; feedback: "voice over is not coming" → voices moved up to slice 4.
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -197,3 +197,6 @@ Activity mode:
 - Replaced Remotion (player and web renderer) with our own SVG scene renderer plus Mediabunny for MP4 export (learner chose this in slice 2). The build found that `@remotion/web-renderer` sends a usage event (site address, success) to remotion.pro on every export, even with the free licence, which breaks the PRD's "nothing leaves the device" promise and its "zero requests to other domains" check. The AGPL Remotion exception was dropped with it. Slice 1's director, rig and design are unchanged.
 - Slice 2 measurements: the exported MP4 is H.264 1280×720 with AAC 48 kHz stereo. The first sound effect starts at 0.150 s (planned 0.15 s) and the "Remember" ding at 4.150 s (scene start + 0.35 s). The export made zero requests to other domains. Speed on the build PC (headless Chromium): an 84 s video exported in 91 s, about 1.1× real time. The PRD budget (1 min in under 2 min on a Chromebook) needs re-checking on slower hardware; frame painting is the cost to optimise if needed.
 - The offline helper is our own small service worker (`src/offline/sw.ts`). `vite-plugin-pwa` only injects the file list and writes the install manifest, because Workbox's built-in precaching can't report the per-file progress behind the PRD's "Getting ready for offline… N%" strip. The first download is 94 files, 4.95 MB, well inside the PRD's 15 MB budget. The `.woff` font fallbacks are left out, since every supported browser uses `.woff2`.
+- Voices moved from slice 7 to slice 4 after the first hands-on checkpoint (learner: "voice over is not coming"). The later slices shift down one place; nothing was cut.
+- Slice 4 measured: offline voicing about 23 s per scene on a cold start (warm-up added when the panel opens); recording tests use Chromium's fake microphone, split into two files because launch flags must be top-level.
+- Reordered on the learner's request ("allow users to edit the video scenes"): Tap a scene (was 7) and the Editor (was 8) now come right after voices as slices 5 and 6; Meet your caveman and Teacher tools move to 7 and 8. No scope change.

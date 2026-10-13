@@ -25,3 +25,6 @@ Thumbs.db
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Copied from node_modules by scripts/copy-ort.mjs
+/public/ort/

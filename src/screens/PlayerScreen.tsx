@@ -1,27 +1,41 @@
 // Watch the video (devpost/prd.md > F7). Our own player: a frame clock draws the current scene's SVG
 // about 30 times a second, sounds play through Web Audio, and the same SVG becomes the MP4 on export.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Download, Maximize, Pause, Play, Save } from 'lucide-react';
-import { playSfxFrom } from '../audio/sounds';
+import { ArrowLeft, Download, Maximize, Mic, Pause, Play, Save, Volume2 } from 'lucide-react';
+import { audioContext, playFrom } from '../audio/sounds';
 import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import { Button } from '../ui/Button';
 import { SceneSvg } from '../video/SceneSvg';
 import { FPS, locate, sceneFrames, timeline } from '../video/timeline';
 import { ExportPanel } from './ExportPanel';
+import { DownloadVoices, VoicePanel } from './VoicePanel';
+import { useVoice } from '../voice/voiceStore';
+import { storage } from '../storage/db';
 
 const fmt = (frames: number) => {
   const s = Math.floor(frames / FPS);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-let sharedAudio: AudioContext | null = null;
 
 export function PlayerScreen() {
   const { project, go, saveProjectFile } = useApp();
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [voicePanel, setVoicePanel] = useState(false);
+  const voice = useVoice();
+  const checkVoices = useVoice((v) => v.check);
+  const [cardDismissed, setCardDismissed] = useState(true);
+  useEffect(() => {
+    void checkVoices();
+    void storage().then((db) => db.getSetting<Record<string, true>>('seenTips')).then((t) => setCardDismissed(!!t?.voiceCard));
+  }, [checkVoices]);
+  const dismissCard = () => {
+    setCardDismissed(true);
+    void storage().then(async (db) => db.putSetting('seenTips', { ...((await db.getSetting<Record<string, true>>('seenTips')) ?? {}), voiceCard: true }));
+  };
   const stage = useRef<HTMLDivElement>(null);
   const clock = useRef<{ raf: number; startAt: number; startFrame: number; stopAudio?: () => void; token: number }>({ raf: 0, startAt: 0, startFrame: 0, token: 0 });
   const tl = useMemo(() => (project ? timeline(project) : null), [project]);
@@ -44,9 +58,9 @@ export function PlayerScreen() {
       const start = from >= tl.total - 1 ? 0 : from;
       setPlaying(true);
       try {
-        sharedAudio ??= new AudioContext();
-        await sharedAudio.resume();
-        const stopAudio = await playSfxFrom(sharedAudio, project, start / FPS);
+        const ctx = audioContext();
+        await ctx.resume();
+        const stopAudio = await playFrom(ctx, project, start / FPS);
         if (token !== c.token) return stopAudio();
         c.stopAudio = stopAudio;
       } catch {
@@ -152,6 +166,9 @@ export function PlayerScreen() {
         <Button onClick={() => void stage.current?.requestFullscreen?.()} aria-label={en.player.fullscreen}>
           <Maximize size={18} aria-hidden="true" /> {en.player.fullscreen}
         </Button>
+        <Button onClick={() => { stop(); setVoicePanel(true); }}>
+          <Volume2 size={18} aria-hidden="true" /> {en.voice.button}
+        </Button>
         <Button onClick={() => project && saveProjectFile(project)}>
           <Save size={18} aria-hidden="true" /> {en.saveProjectFile}
         </Button>
@@ -160,6 +177,15 @@ export function PlayerScreen() {
         </Button>
       </div>
 
+      {project.voiceMode === 'none' && !cardDismissed && voice.status !== 'ready' && voice.status !== 'unsupported' && (
+        <div className="panel mt-4 flex flex-wrap items-center gap-3 p-4" data-testid="voice-card">
+          <Volume2 size={22} aria-hidden="true" className="text-terracotta" />
+          <p className="flex-1">{en.voice.cardText}</p>
+          <DownloadVoices compact />
+          {voice.status === 'not-downloaded' && <Button variant="ghost" onClick={dismissCard}>{en.voice.notNow}</Button>}
+        </div>
+      )}
+      {voice.voicing && !voicePanel && <p className="mt-3 font-semibold" aria-live="polite">{en.voice.voicing(voice.voicing.done, voice.voicing.total)}</p>}
       <p className="mt-4 text-sm text-ash">{en.player.tip}</p>
       <ol className="mt-2 flex gap-3 overflow-x-auto pb-3" data-testid="thumbnails">
         {tl.scenes.map((scene, i) => (
@@ -172,7 +198,9 @@ export function PlayerScreen() {
               className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'}`}
             >
               <SceneSvg project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
-              <span className="block truncate px-2 py-1 text-xs text-ash">
+              <span className="flex items-center gap-1 truncate px-2 py-1 text-xs text-ash">
+                {scene.voice.type === 'recorded' && <Mic size={12} aria-label={en.voice.recorded} />}
+                {scene.voice.type === 'builtin' && <Volume2 size={12} aria-label={en.voice.builtinTag} />}
                 {i + 1}. {scene.kind === 'end' ? en.player.endCard : scene.captions[0]?.text}
               </span>
             </button>
@@ -180,6 +208,7 @@ export function PlayerScreen() {
         ))}
       </ol>
       {exporting && <ExportPanel project={project} onClose={() => setExporting(false)} />}
+      {voicePanel && <VoicePanel onClose={() => setVoicePanel(false)} />}
     </main>
   );
 }

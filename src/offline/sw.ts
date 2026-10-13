@@ -7,6 +7,7 @@ export {};
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: { url: string; revision: string | null }[] };
 
 const CACHE = 'stoneage-app-v1';
+const RUNTIME = 'stoneage-runtime-v1'; // files saved on first use (voice engine)
 const ENTRIES = self.__WB_MANIFEST;
 const urlOf = (u: string) => new URL(u, self.location.origin).href;
 
@@ -78,7 +79,15 @@ self.addEventListener('fetch', (event) => {
       const url = new URL(req.url);
       const key = byUrl.get(url.origin + url.pathname);
       const cached = key ? await cache.match(key) : undefined;
-      return cached ?? fetch(req);
+      if (cached) return cached;
+      // Files not in the first offline save (the voice engine, ~21 MB, fetched only when someone picks
+      // Caveman voices) are kept the first time they're used online, so voices then work offline too.
+      const runtime = await caches.open(RUNTIME);
+      const kept = await runtime.match(url.origin + url.pathname);
+      if (kept) return kept;
+      const res = await fetch(req);
+      if (res.ok && res.status === 200) await runtime.put(url.origin + url.pathname, res.clone());
+      return res;
     })(),
   );
 });

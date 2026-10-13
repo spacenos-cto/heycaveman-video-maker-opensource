@@ -1,57 +1,94 @@
-// Sound effects for the player (Web Audio) and the exporter (OfflineAudioContext).
-// The bundled WAVs are decoded once and cached; nothing is fetched from anywhere but this app.
+// Everything the video sounds like: voices (built-in or recorded) and gentle sound effects. The player
+// plays these through Web Audio; the exporter mixes the very same list offline into the MP4.
 import { sfxGain, sfxOffset } from '../director/sfx';
+import { storage } from '../storage/db';
 import type { Project } from '../types';
 import { FPS, timeline } from '../video/timeline';
 
 const rawCache = new Map<string, Promise<ArrayBuffer>>();
 
-function raw(id: string): Promise<ArrayBuffer> {
-  let p = rawCache.get(id);
+function rawSfx(id: string): Promise<ArrayBuffer> {
+  const key = `sfx:${id}`;
+  let p = rawCache.get(key);
   if (!p) {
     p = fetch(`/sfx/${id}.wav`).then((r) => {
       if (!r.ok) throw new Error(`sound ${id} missing`);
       return r.arrayBuffer();
     });
-    rawCache.set(id, p);
+    rawCache.set(key, p);
   }
   return p;
 }
 
-export async function decode(ctx: BaseAudioContext, id: string): Promise<AudioBuffer> {
-  // decodeAudioData detaches its input, so give it a copy.
-  return ctx.decodeAudioData((await raw(id)).slice(0));
+function rawVoice(blobId: string): Promise<ArrayBuffer> {
+  const key = `voice:${blobId}`;
+  let p = rawCache.get(key);
+  if (!p) {
+    p = storage()
+      .then((db) => db.getBlob(blobId))
+      .then((b) => {
+        if (!b) throw new Error('voice clip missing');
+        return b.arrayBuffer();
+      });
+    rawCache.set(key, p);
+  }
+  return p;
 }
 
-/** Every effect in the video: when (seconds from the start) and which sound. */
-export function sfxEvents(project: Project): { at: number; id: string }[] {
-  if (project.sfxLevel === 'off') return [];
+export type AudioEvent = { at: number; kind: 'sfx' | 'voice'; ref: string };
+
+/** Every sound in the video and when it starts (seconds from the start of the video). */
+export function audioEvents(project: Project): AudioEvent[] {
   const tl = timeline(project);
-  return tl.scenes.flatMap((s, i) => (s.sfx ? [{ at: tl.starts[i] / FPS + sfxOffset(s.sfx), id: s.sfx }] : []));
+  const events: AudioEvent[] = [];
+  tl.scenes.forEach((s, i) => {
+    const start = tl.starts[i] / FPS;
+    if (s.voice.blobId && s.voice.type !== 'none') events.push({ at: start, kind: 'voice', ref: s.voice.blobId });
+    if (s.sfx && project.sfxLevel !== 'off') events.push({ at: start + sfxOffset(s.sfx), kind: 'sfx', ref: s.sfx });
+  });
+  return events;
 }
 
-/** Schedule effects on a live AudioContext from `fromSec` onwards. Returns a stop() for pause/seek. */
-export async function playSfxFrom(ctx: AudioContext, project: Project, fromSec: number): Promise<() => void> {
-  const gain = ctx.createGain();
-  gain.gain.value = sfxGain(project.sfxLevel);
-  gain.connect(ctx.destination);
+export const hasVoices = (p: Project) => p.scenes.some((s) => s.voice.blobId && s.voice.type !== 'none');
+
+/** Effects sit a little lower under a voice so they never drown it out (devpost/prd.md > F11). */
+export const effectsGain = (p: Project) => sfxGain(p.sfxLevel) * (hasVoices(p) ? 0.7 : 1);
+
+export async function decodeEvent(ctx: BaseAudioContext, ev: AudioEvent): Promise<AudioBuffer> {
+  const bytes = ev.kind === 'voice' ? await rawVoice(ev.ref) : await rawSfx(ev.ref);
+  return ctx.decodeAudioData(bytes.slice(0)); // decodeAudioData detaches its input
+}
+
+/** Schedule all sounds from `fromSec` on a live AudioContext. Returns stop() for pause and seek. */
+export async function playFrom(ctx: AudioContext, project: Project, fromSec: number): Promise<() => void> {
+  const voiceGain = ctx.createGain();
+  const fxGain = ctx.createGain();
+  voiceGain.gain.value = 1;
+  fxGain.gain.value = effectsGain(project);
+  voiceGain.connect(ctx.destination);
+  fxGain.connect(ctx.destination);
   const sources: AudioBufferSourceNode[] = [];
-  let stopped = false;
-  const events = sfxEvents(project).filter((ev) => ev.at >= fromSec - 0.05);
-  // Decode first, then start the clock, so early effects aren't late.
-  const buffers = new Map<string, AudioBuffer>();
-  for (const id of new Set(events.map((e) => e.id))) buffers.set(id, await decode(ctx, id));
+  // Decode first, then start the clock, so the first sounds aren't late.
+  const decoded: { ev: AudioEvent; buffer: AudioBuffer }[] = [];
+  for (const ev of audioEvents(project)) {
+    try {
+      const buffer = await decodeEvent(ctx, ev);
+      if (ev.at + buffer.duration > fromSec) decoded.push({ ev, buffer });
+    } catch {
+      /* a missing clip plays as silence */
+    }
+  }
   const t0 = ctx.currentTime;
-  for (const ev of events) {
-    if (stopped) break;
+  for (const { ev, buffer } of decoded) {
     const src = ctx.createBufferSource();
-    src.buffer = buffers.get(ev.id)!;
-    src.connect(gain);
-    src.start(t0 + Math.max(0, ev.at - fromSec));
+    src.buffer = buffer;
+    src.connect(ev.kind === 'voice' ? voiceGain : fxGain);
+    const delay = ev.at - fromSec;
+    if (delay >= 0) src.start(t0 + delay);
+    else src.start(t0, -delay); // seeking into the middle of a line
     sources.push(src);
   }
   return () => {
-    stopped = true;
     for (const s of sources) {
       try {
         s.stop();
@@ -59,6 +96,29 @@ export async function playSfxFrom(ctx: AudioContext, project: Project, fromSec: 
         /* already finished */
       }
     }
-    gain.disconnect();
+    voiceGain.disconnect();
+    fxGain.disconnect();
   };
+}
+
+/** Play one clip on its own (hear sample, play back a recording). */
+export async function playBlob(ctx: AudioContext, blob: Blob): Promise<() => void> {
+  const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(ctx.destination);
+  src.start();
+  return () => {
+    try {
+      src.stop();
+    } catch {
+      /* finished */
+    }
+  };
+}
+
+let shared: AudioContext | null = null;
+export function audioContext(): AudioContext {
+  shared ??= new AudioContext();
+  return shared;
 }

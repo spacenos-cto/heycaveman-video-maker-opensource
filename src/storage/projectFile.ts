@@ -34,11 +34,14 @@ export function fromFileJson(json: unknown): { project: Project; newer: boolean 
   return { project, newer };
 }
 
-export function packProject(project: Project): Uint8Array {
-  return zipSync({ 'project.json': strToU8(JSON.stringify(toFileJson(project), null, 1)) }, { level: 6 });
+/** Voice clips travel inside the file as audio/<clip id>.wav (devpost/prd.md > F14 rule 2). */
+export function packProject(project: Project, audio: Record<string, Uint8Array> = {}): Uint8Array {
+  const files: Record<string, Uint8Array> = { 'project.json': strToU8(JSON.stringify(toFileJson(project), null, 1)) };
+  for (const [id, bytes] of Object.entries(audio)) files[`audio/${encodeURIComponent(id)}.wav`] = bytes;
+  return zipSync(files, { level: 6 });
 }
 
-export function unpackProject(bytes: Uint8Array): { project: Project; newer: boolean } {
+export function unpackProject(bytes: Uint8Array): { project: Project; newer: boolean; audio: Record<string, Uint8Array> } {
   let files: Record<string, Uint8Array>;
   try {
     files = unzipSync(bytes);
@@ -47,8 +50,13 @@ export function unpackProject(bytes: Uint8Array): { project: Project; newer: boo
   }
   const json = files['project.json'];
   if (!json) throw new ProjectFileError('no project.json');
+  const audio: Record<string, Uint8Array> = {};
+  for (const [name, data] of Object.entries(files)) {
+    const m = name.match(/^audio\/(.+)\.wav$/);
+    if (m) audio[decodeURIComponent(m[1])] = data;
+  }
   try {
-    return fromFileJson(JSON.parse(strFromU8(json)));
+    return { ...fromFileJson(JSON.parse(strFromU8(json))), audio };
   } catch (e) {
     if (e instanceof ProjectFileError) throw e;
     throw new ProjectFileError('bad json');

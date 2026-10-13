@@ -155,10 +155,20 @@ export const useApp = create<AppState>((set, get) => ({
     await db.putProject({ ...p, deletedAt: undefined, updatedAt: Date.now() });
     await get().refreshProjects();
   },
-  saveProjectFile: (project) => download(packProject(project), projectFileName(project.title), 'application/zip'),
+  saveProjectFile: (project) =>
+    void (async () => {
+      const db = await storage();
+      const audio: Record<string, Uint8Array> = {};
+      for (const s of project.scenes) {
+        const blob = s.voice.blobId ? await db.getBlob(s.voice.blobId) : undefined;
+        if (blob && s.voice.blobId) audio[s.voice.blobId] = new Uint8Array(await blob.arrayBuffer());
+      }
+      download(packProject(project, audio), projectFileName(project.title), 'application/zip');
+    })(),
   openProjectFile: async (file) => {
-    const { project, newer } = unpackProject(new Uint8Array(await file.arrayBuffer()));
+    const { project, newer, audio } = unpackProject(new Uint8Array(await file.arrayBuffer()));
     const db = await storage();
+    for (const [id, bytes] of Object.entries(audio)) await db.putBlob(id, new Blob([bytes as BlobPart], { type: 'audio/wav' }));
     // Opening someone else's copy of a project you already have makes a separate copy, never overwrites.
     const existing = await db.getProject(project.id);
     const p = existing ? { ...project, id: newId(), updatedAt: Date.now() } : { ...project, updatedAt: Date.now() };

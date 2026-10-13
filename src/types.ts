@@ -62,7 +62,7 @@ export type Scene = {
   sfx?: string;
   durationMs: number;
   pauseHere?: boolean;
-  voice: { type: 'builtin' | 'recorded' | 'none'; blobId?: string; envelope?: number[]; stale?: boolean };
+  voice: { type: 'builtin' | 'recorded' | 'none'; blobId?: string; envelope?: number[]; stale?: boolean; voiceId?: string; durationMs?: number };
 };
 
 export type Project = {
@@ -75,6 +75,8 @@ export type Project = {
   scenes: Scene[];
   seed: number;
   voiceMode: 'builtin' | 'recorded' | 'none';
+  voiceId?: string;
+  voiceSpeed?: 'slow' | 'normal' | 'fast';
   sfxLevel: 'on' | 'gentle' | 'off';
   readingSpeed: 'slow' | 'normal' | 'fast';
   endCard: boolean;
