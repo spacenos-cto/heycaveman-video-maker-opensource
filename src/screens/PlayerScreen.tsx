@@ -10,6 +10,7 @@ import { SceneSvg } from '../video/SceneSvg';
 import { FPS, locate, sceneFrames, timeline } from '../video/timeline';
 import { ExportPanel } from './ExportPanel';
 import { DownloadVoices, VoicePanel } from './VoicePanel';
+import { ScenePanel } from './ScenePanel';
 import { useVoice } from '../voice/voiceStore';
 import { storage } from '../storage/db';
 
@@ -20,7 +21,8 @@ const fmt = (frames: number) => {
 
 
 export function PlayerScreen() {
-  const { project, go, saveProjectFile } = useApp();
+  const { project, go, saveProjectFile, undo, redo } = useApp();
+  const [editing, setEditing] = useState<number | null>(null);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -99,10 +101,18 @@ export function PlayerScreen() {
   );
 
   const at = tl ? locate(tl, frame) : { index: 0, local: 0 };
+  const shown = tl ? Math.min(frame, tl.total - 1) : 0;
   const jump = useCallback((i: number) => tl && seek(tl.starts[Math.min(Math.max(i, 0), tl.starts.length - 1)]), [tl, seek]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const typing = (e.target as HTMLElement)?.closest?.('input, textarea, select');
+      if ((e.ctrlKey || e.metaKey) && !typing && !exporting && !voicePanel) {
+        const k = e.key.toLowerCase();
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); stop(); undo(); return; }
+        if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); stop(); redo(); return; }
+      }
+      if ((e.target as HTMLElement)?.closest?.('[data-scene-panel]')) return;
       if (exporting || (e.target as HTMLElement)?.closest('input, textarea, select, [role=dialog]')) return;
       if (e.key === ' ') {
         e.preventDefault();
@@ -112,17 +122,36 @@ export function PlayerScreen() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [toggle, jump, at.index, exporting]);
+  }, [toggle, jump, at.index, exporting, voicePanel, undo, redo, stop]);
 
   useEffect(() => stop, [stop]);
+
+  // While a scene is open for editing, keep the player paused on it a moment in (drawings have popped in).
+  useEffect(() => {
+    if (editing === null || !tl || playing || editing >= tl.starts.length) return;
+    const start = tl.starts[editing];
+    const end = tl.starts[editing + 1] ?? tl.total;
+    setFrame((f) => (f >= start && f < end ? f : Math.min(start + 24, end - 1)));
+  }, [editing, tl, playing]);
 
   if (!project || !tl) {
     go('start');
     return null;
   }
+  const editIndex = editing !== null && editing < project.scenes.length ? editing : null;
+  const openScene = (i: number) => {
+    seek(Math.min(tl.starts[i] + 24, (tl.starts[i + 1] ?? tl.total) - 1));
+    setEditing(i < project.scenes.length ? i : null); // the end card is set in Download video
+  };
+  const selectScene = (i: number) => {
+    stop();
+    setEditing(i);
+  };
 
   return (
-    <main className="mx-auto w-full max-w-[1100px] px-4 pb-16 pt-6">
+    <main className={`mx-auto w-full px-4 pb-16 pt-6 ${editIndex !== null ? 'max-w-[1440px] lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-6' : 'max-w-[1100px]'}`}>
+      {/* On phones the column dissolves so the video can stay pinned above the scene panel. */}
+      <div className={`min-w-0 ${editIndex !== null ? 'max-lg:contents' : ''}`}>
       <Button variant="ghost" className="px-0" onClick={() => go('start')}>
         <ArrowLeft size={18} aria-hidden="true" /> {en.player.back}
       </Button>
@@ -131,7 +160,7 @@ export function PlayerScreen() {
       {/* The video sits on a charcoal "slate" frame. Click to play or pause. */}
       <div
         ref={stage}
-        className="mx-auto mt-4 overflow-hidden rounded-[14px] border-2 border-charcoal bg-charcoal"
+        className={`mx-auto mt-4 overflow-hidden rounded-[14px] border-2 border-charcoal bg-charcoal ${editIndex !== null ? 'max-lg:sticky max-lg:top-2 max-lg:z-20' : ''}`}
         style={{ maxWidth: project.shape === 'wide' ? '100%' : project.shape === 'square' ? '70vh' : '40vh' }}
         data-testid="player"
         onClick={toggle}
@@ -150,7 +179,7 @@ export function PlayerScreen() {
             aria-label="Position in the video"
             min={0}
             max={tl.total - 1}
-            value={frame}
+            value={shown}
             onChange={(e) => seek(Number(e.target.value))}
             className="w-full accent-[#E8892B]"
           />
@@ -161,7 +190,7 @@ export function PlayerScreen() {
           </div>
         </div>
         <span className="font-display tabular-nums text-ash" data-testid="time">
-          {fmt(frame)} / {fmt(tl.total)}
+          {fmt(shown)} / {fmt(tl.total)}
         </span>
         <Button onClick={() => void stage.current?.requestFullscreen?.()} aria-label={en.player.fullscreen}>
           <Maximize size={18} aria-hidden="true" /> {en.player.fullscreen}
@@ -192,10 +221,11 @@ export function PlayerScreen() {
           <li key={scene.id} className="shrink-0">
             <button
               type="button"
-              onClick={() => jump(i)}
+              onClick={() => openScene(i)}
               aria-label={en.player.scene(i + 1)}
               aria-current={i === at.index ? 'true' : undefined}
-              className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'}`}
+              aria-expanded={i < project.scenes.length ? editIndex === i : undefined}
+              className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'} ${editIndex === i ? 'ring-2 ring-ochre ring-offset-2' : ''}`}
             >
               <SceneSvg project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
               <span className="flex items-center gap-1 truncate px-2 py-1 text-xs text-ash">
@@ -207,6 +237,8 @@ export function PlayerScreen() {
           </li>
         ))}
       </ol>
+      </div>
+      {editIndex !== null && <ScenePanel index={editIndex} onSelect={selectScene} onClose={() => setEditing(null)} />}
       {exporting && <ExportPanel project={project} onClose={() => setExporting(false)} />}
       {voicePanel && <VoicePanel onClose={() => setVoicePanel(false)} />}
     </main>

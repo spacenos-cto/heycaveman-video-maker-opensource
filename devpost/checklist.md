@@ -90,7 +90,7 @@ Build mode: fast
   Learner check: Download the voices, pick one, and make a video. Then record your own voice for one scene. Does his mouth move with the voice, and does the downloaded MP4 have both voices?
   Commit: `Add offline caveman voices and voice recording`
 
-- [ ] **5. Tap a scene to change it, with undo**
+- [x] **5. Tap a scene to change it, with undo**
   Becomes usable: Tapping a thumbnail opens the scene panel to change words, caption and style, caveman action and face, background, props, and sound, and to duplicate, delete, move or add a scene. Every change shows instantly, and undo/redo keeps at least 50 steps. The Re-make prompt protects scene edits.
   Why now: Completes the core loop's "watch and tweak" step. It needs scenes, moods and shapes in place first.
   PRD ref: `prd.md > F8 — Quick scene edits (tap a scene)`, `prd.md > F6 — Make (the offline director)` (Re-make prompt)
@@ -200,3 +200,4 @@ Activity mode:
 - Voices moved from slice 7 to slice 4 after the first hands-on checkpoint (learner: "voice over is not coming"). The later slices shift down one place; nothing was cut.
 - Slice 4 measured: offline voicing about 23 s per scene on a cold start (warm-up added when the panel opens); recording tests use Chromium's fake microphone, split into two files because launch flags must be top-level.
 - Reordered on the learner's request ("allow users to edit the video scenes"): Tap a scene (was 7) and the Editor (was 8) now come right after voices as slices 5 and 6; Meet your caveman and Teacher tools move to 7 and 8. No scope change.
+- Slice 5: on phones the scene panel sits under the video, so the video now stays pinned at the top while a scene is open; caption colours (Yellow/Red/White/Outlined) are drawn by the renderer and override the mood. Re-make of an edited video replaces it in place, and one Undo brings the edits back.

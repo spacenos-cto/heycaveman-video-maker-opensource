@@ -41,8 +41,12 @@ export function MakingScreen() {
           if (cancelled.current) return;
           setStep(i);
         }
-        const project = newProject(draft, DEFAULTS);
+        const made = newProject(draft, DEFAULTS);
         if (cancelled.current) return;
+        // Re-make replaces the edited video in place (one Undo brings the edits back).
+        const { remakeId, project: open, setRemakeId } = useApp.getState();
+        const project = remakeId && open?.id === remakeId ? { ...made, id: open.id, createdAt: open.createdAt, caveman: open.caveman } : made;
+        setRemakeId(null);
         setProject(project);
         go('player');
       } catch (e) {

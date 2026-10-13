@@ -122,3 +122,12 @@ export function audioContext(): AudioContext {
   shared ??= new AudioContext();
   return shared;
 }
+
+/** Preview one sound effect (scene panel). */
+export async function playSfx(ctx: AudioContext, id: string): Promise<void> {
+  const buffer = await ctx.decodeAudioData((await rawSfx(id)).slice(0));
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(ctx.destination);
+  src.start();
+}

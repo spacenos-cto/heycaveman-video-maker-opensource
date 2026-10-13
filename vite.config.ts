@@ -41,5 +41,5 @@ export default defineConfig({
       },
     }),
   ],
-  test: { include: ['tests/director/**/*.test.ts', 'tests/storage/**/*.test.ts'], environment: 'node' },
+  test: { include: ['tests/director/**/*.test.ts', 'tests/storage/**/*.test.ts', 'tests/editor/**/*.test.ts'], environment: 'node' },
 });

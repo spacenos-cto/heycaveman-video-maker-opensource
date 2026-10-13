@@ -50,6 +50,13 @@ function wrap(words: string[], fontSize: number, maxWidth: number): string[][] {
   return lines;
 }
 
+const CAPTION_STYLES: Record<NonNullable<Caption['style']>, { fill: string; stroke: string; strokeWidth: number }> = {
+  yellow: { fill: '#FFD60A', stroke: '#111111', strokeWidth: 0.2 },
+  red: { fill: '#FF5A4E', stroke: '#111111', strokeWidth: 0.2 },
+  white: { fill: '#FFFFFF', stroke: '#111111', strokeWidth: 0.1 },
+  outlined: { fill: '#FFFFFF', stroke: '#111111', strokeWidth: 0.32 },
+};
+
 const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 function CaptionText({ caption, mood, shape, frame, width, height }: { caption: Caption; mood: MoodSpec; shape: Shape; frame: number; width: number; height: number }) {
@@ -60,13 +67,18 @@ function CaptionText({ caption, mood, shape, frame, width, height }: { caption: 
   const lineH = size * 1.08;
   const bottom = height * (shape === 'tall' ? 0.84 : 0.93);
   const kw = caption.keyword ? norm(caption.keyword) : undefined;
-  const stroke = mood.band ? 0 : size * 0.2;
+  // A chosen caption colour wins over the mood; otherwise the mood decides (devpost/prd.md > F8 Caption).
+  const look = caption.style ? CAPTION_STYLES[caption.style] : undefined;
+  const band = look ? undefined : mood.band;
+  const fill = look?.fill ?? mood.captionFill;
+  const strokeColor = look?.stroke ?? mood.captionStroke;
+  const stroke = band ? 0 : size * (look?.strokeWidth ?? 0.2);
   const longest = Math.max(...lines.map((l) => l.join(' ').length));
   const bandW = Math.min(width * 0.92, longest * size * 0.52 + size * 0.8);
   return (
     <g data-testid="caption" opacity={Math.min(1, enter * 1.4)} transform={`translate(0 ${(1 - enter) * 40})`}>
-      {mood.band && (
-        <rect x={(width - bandW) / 2} y={bottom - lines.length * lineH - size * 0.05} width={bandW} height={lines.length * lineH + size * 0.25} rx={size * 0.3} fill={mood.band} />
+      {band && (
+        <rect x={(width - bandW) / 2} y={bottom - lines.length * lineH - size * 0.05} width={bandW} height={lines.length * lineH + size * 0.25} rx={size * 0.3} fill={band} />
       )}
       {lines.map((line, li) => (
         <text
@@ -77,8 +89,8 @@ function CaptionText({ caption, mood, shape, frame, width, height }: { caption: 
           fontFamily={CAPTION_FONT}
           fontWeight={800}
           fontSize={size}
-          fill={mood.captionFill}
-          stroke={stroke ? mood.captionStroke : undefined}
+          fill={fill}
+          stroke={stroke ? strokeColor : undefined}
           strokeWidth={stroke || undefined}
           strokeLinejoin="round"
           paintOrder="stroke"
@@ -86,8 +98,8 @@ function CaptionText({ caption, mood, shape, frame, width, height }: { caption: 
           {line.map((w, wi) => (
             <tspan
               key={wi}
-              fill={kw && norm(w) === kw ? mood.highlight : undefined}
-              textDecoration={kw && norm(w) === kw && mood.band ? 'underline' : undefined}
+              fill={kw && norm(w) === kw && !look ? mood.highlight : undefined}
+              textDecoration={kw && norm(w) === kw && band ? 'underline' : undefined}
             >
               {wi ? ` ${w}` : w}
             </tspan>

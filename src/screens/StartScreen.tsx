@@ -12,7 +12,8 @@ const WARN_WORDS = 1500;
 const MAX_WORDS = 3000;
 
 export function StartScreen() {
-  const { draft, setDraft, go, projects, openProject } = useApp();
+  const { draft, setDraft, go, projects, openProject, project, setRemakeId } = useApp();
+  const [askRemake, setAskRemake] = useState(false);
   const recent = projects.find((p) => !p.deletedAt);
   const [note, setNote] = useState<string | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -40,6 +41,12 @@ export function StartScreen() {
       setNote(en.topicNote);
       return;
     }
+    // Back from a video with hand edits: ask before replacing them (devpost/prd.md > F6 Edge case 3).
+    if (project?.edited && !project.deletedAt) {
+      setAskRemake(true);
+      return;
+    }
+    setRemakeId(null);
     go('making');
   };
 
@@ -113,6 +120,18 @@ export function StartScreen() {
       {words === 0 && <p className="mt-2 text-center text-sm text-ash">{en.makeHint}</p>}
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>
+    {askRemake && project && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={() => setAskRemake(false)}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="remake-title" aria-describedby="remake-body" className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && setAskRemake(false)}>
+            <h2 id="remake-title" className="font-display text-2xl font-bold">{en.remake.title}</h2>
+            <p id="remake-body" className="mt-2">{en.remake.body}</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button variant="primary" autoFocus onClick={() => { setRemakeId(project.id); setAskRemake(false); go('making'); }}>{en.remake.yes}</Button>
+              <Button onClick={() => { setAskRemake(false); go('player'); }}>{en.remake.no}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

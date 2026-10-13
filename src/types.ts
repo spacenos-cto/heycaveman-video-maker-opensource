@@ -84,6 +84,7 @@ export type Project = {
   createdAt: number;
   updatedAt: number;
   deletedAt?: number;
+  edited?: boolean; // scenes were changed by hand since Make (Re-make asks first)
   extra?: Record<string, unknown>; // unknown / premium fields, kept untouched
 };
 

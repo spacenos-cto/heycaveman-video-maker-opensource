@@ -7,6 +7,7 @@ import { storage, storageBlocked } from '../storage/db';
 import { packProject, projectFileName, unpackProject } from '../storage/projectFile';
 import { claimProject, releaseProject } from '../storage/tabs';
 import type { Project } from '../types';
+import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './history';
 
 export type Screen = 'start' | 'making' | 'player' | 'videos';
 
@@ -28,10 +29,16 @@ type AppState = {
   readOnly: boolean;
   projects: Project[]; // My videos, newest first (includes recently deleted)
   notice: string | null; // one-time notes such as the first-save warning
+  history: History;
+  /** Set when Make should replace this edited video in place (the Re-make prompt said yes). */
+  remakeId: string | null;
   setDraft: (text: string) => void;
   go: (screen: Screen) => void;
-  /** Replace the open project (auto-saved). */
-  setProject: (project: Project | null) => void;
+  /** Replace the open project (auto-saved). Changes to the same video can be undone; `key` merges typing into one step. */
+  setProject: (project: Project | null, key?: string) => void;
+  undo: () => void;
+  redo: () => void;
+  setRemakeId: (id: string | null) => void;
   openProject: (id: string) => Promise<void>;
   refreshProjects: () => Promise<void>;
   renameProject: (id: string, title: string) => Promise<void>;
@@ -79,6 +86,8 @@ export const useApp = create<AppState>((set, get) => ({
   readOnly: false,
   projects: [],
   notice: null,
+  history: emptyHistory(),
+  remakeId: null,
   setDraft: (draft) => {
     try {
       localStorage.setItem(DRAFT_KEY, draft);
@@ -95,8 +104,11 @@ export const useApp = create<AppState>((set, get) => ({
     set({ screen });
     if (screen === 'videos') void get().refreshProjects();
   },
-  setProject: (project) => {
-    const isNew = project && project.id !== get().project?.id;
+  setProject: (project, key) => {
+    const before = get().project;
+    const isNew = project && project.id !== before?.id;
+    if (project && before && !isNew && project !== before && !get().readOnly) set({ history: record(get().history, before, key) });
+    if (isNew || !project) set({ history: emptyHistory() });
     set({ project });
     if (!project) return;
     if (isNew) {
@@ -177,6 +189,22 @@ export const useApp = create<AppState>((set, get) => ({
     set({ screen: 'player' });
     return { newer };
   },
+  // setProject records a step too; the step's own history replaces it straight after.
+  undo: () => {
+    const { project, history, readOnly } = get();
+    const step = project && !readOnly ? undoStep(history, project) : null;
+    if (!step) return;
+    get().setProject(step.project);
+    set({ history: step.history });
+  },
+  redo: () => {
+    const { project, history, readOnly } = get();
+    const step = project && !readOnly ? redoStep(history, project) : null;
+    if (!step) return;
+    get().setProject(step.project);
+    set({ history: step.history });
+  },
+  setRemakeId: (remakeId) => set({ remakeId }),
   dismissNotice: () => set({ notice: null }),
 }));
 
