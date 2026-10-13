@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // The voice worker uses ES modules (import.meta), so build workers as modules.
+  worker: { format: "es" },
   plugins: [
     react(),
     tailwindcss(),
@@ -19,7 +21,8 @@ export default defineConfig({
       injectManifest: {
         // .woff is a fallback older browsers never need offline; woff2 covers every supported browser.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,wav,webmanifest}'],
-        globIgnores: ['**/*.woff'],
+        // The voice engine (WebAssembly) is saved on first use instead, keeping the first download small.
+        globIgnores: ['**/*.woff', 'ort/**', '**/kokoroWorker-*.js'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
       manifest: {
