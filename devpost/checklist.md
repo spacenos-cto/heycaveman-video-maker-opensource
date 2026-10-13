@@ -9,7 +9,7 @@ Build mode: fast
 
 ## Slices
 
-- [ ] **1. Type a lesson, press Make, and watch the same caveman act it out**
+- [x] **1. Type a lesson, press Make, and watch the same caveman act it out**
   Becomes usable: A running app with the cave-paper Start screen (Write it tab, live word counter, Try an example, Wide shape, Make my video). Pressing Make runs the offline director and plays the video in the Player: the Classic caveman acting through every scene with matching props, settings and big captions in the Bright mood. Nothing persists yet.
   Why now: This is the kernel (the same caveman acting across scenes, made from text with no AI). It also proves the whole path at once: scaffold, director, rig, Remotion composition and Player. Everything later lands on top of it.
   PRD ref: `prd.md > The Core Journey` (J1 steps 1–3, 5), `prd.md > F2 — The Start screen (first screen)`, `prd.md > F3 — Lesson input` (F3.1), `prd.md > F6 — Make (the offline director)`, `prd.md > F7 — Watch (the player)`, `prd.md > Look and Feel`
