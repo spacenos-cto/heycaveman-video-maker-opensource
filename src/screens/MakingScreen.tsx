@@ -1,0 +1,106 @@
+// Making progress (devpost/prd.md > F6): the caveman pushes a stone wheel while the steps tick off.
+import { useEffect, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
+import { CavemanRig } from '../caveman/CavemanRig';
+import { newProject } from '../director';
+import { clean } from '../director/clean';
+import { group } from '../director/group';
+import { split } from '../director/split';
+import { en } from '../i18n/en';
+import { DEFAULTS, useApp } from '../store/app';
+import { Button } from '../ui/Button';
+
+const STEP_MS = 380; // long enough to read each step; the director itself takes milliseconds
+
+export function MakingScreen() {
+  const { draft, go, setProject } = useApp();
+  const [step, setStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [frame, setFrame] = useState(0);
+  const cancelled = useRef(false);
+  const sceneCount = group(split(clean(draft).text)).length;
+
+  useEffect(() => {
+    const raf = { id: 0 };
+    const tick = () => {
+      setFrame((f) => f + 1);
+      raf.id = requestAnimationFrame(tick);
+    };
+    raf.id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.id);
+  }, []);
+
+  useEffect(() => {
+    cancelled.current = false;
+    let timer: number;
+    const run = async () => {
+      try {
+        for (let i = 1; i <= 3; i++) {
+          await new Promise((r) => (timer = window.setTimeout(r, STEP_MS)));
+          if (cancelled.current) return;
+          setStep(i);
+        }
+        const project = newProject(draft, DEFAULTS);
+        if (cancelled.current) return;
+        setProject(project);
+        go('player');
+      } catch (e) {
+        setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+      }
+    };
+    void run();
+    return () => {
+      cancelled.current = true;
+      clearTimeout(timer);
+    };
+  }, [draft, go, setProject]);
+
+  const labels = [en.making.steps[0] as string, (en.making.steps[1] as (n: number) => string)(sceneCount), en.making.steps[2] as string];
+
+  return (
+    <main className="mx-auto flex w-full max-w-[720px] flex-col items-center px-4 pt-14 text-center">
+      <h1 className="font-display text-3xl font-bold">{en.making.title}</h1>
+      <div className="relative mt-8 h-40 w-full max-w-md overflow-hidden" aria-hidden="true">
+        <svg viewBox="0 0 400 160" className="h-full w-full">
+          <line x1="0" y1="150" x2="400" y2="150" stroke="#1F1A17" strokeWidth="4" strokeLinecap="round" />
+          <g transform={`translate(${40 + (Math.min(step, 3) / 3) * 220}, 0)`}>
+            <svg x="0" y="10" width="88" height="141" viewBox="0 0 200 320">
+              <CavemanRig design={DEFAULTS.caveman} motion="walk" expression="determined" frame={frame} talking={false} />
+            </svg>
+            <g transform={`translate(110, 108) rotate(${frame * 4})`}>
+              <circle r="38" fill="#B8AFA3" stroke="#1F1A17" strokeWidth="5" />
+              <circle r="8" fill="#6B5F55" stroke="#1F1A17" strokeWidth="4" />
+            </g>
+          </g>
+        </svg>
+      </div>
+      {error ? (
+        <div className="mt-6" role="alert">
+          <p className="text-lg text-berry">{en.making.failed}</p>
+          <div className="mt-4 flex justify-center gap-3">
+            <Button variant="primary" onClick={() => go('start')}>{en.making.tryAgain}</Button>
+            <Button variant="ghost" onClick={() => setShowDetails((s) => !s)}>{en.making.details}</Button>
+          </div>
+          {showDetails && <pre className="mt-3 text-left text-xs text-ash">{error}</pre>}
+        </div>
+      ) : (
+        <ol className="mt-6 space-y-2 text-left" aria-live="polite">
+          {labels.map((label, i) => (
+            <li key={i} className={`flex items-center gap-2 ${i < step ? 'text-moss' : i === step ? 'text-charcoal' : 'text-ash'}`}>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-current">
+                {i < step && <Check size={14} strokeWidth={3} />}
+              </span>
+              {label}
+            </li>
+          ))}
+        </ol>
+      )}
+      {!error && (
+        <Button className="mt-8" onClick={() => { cancelled.current = true; go('start'); }}>
+          {en.making.cancel}
+        </Button>
+      )}
+    </main>
+  );
+}

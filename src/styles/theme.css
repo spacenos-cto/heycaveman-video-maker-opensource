@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+@import '@fontsource/fredoka/600.css';
+@import '@fontsource/fredoka/700.css';
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+@import '@fontsource/baloo-2/800.css';
+
+/* Cave-paper sketchbook. See devpost/prd.md > Look and Feel. */
+@theme {
+  --color-cave-paper: #fbf6ec;
+  --color-bone: #ffffff;
+  --color-sand: #f1e8d6;
+  --color-charcoal: #1f1a17;
+  --color-ash: #6b5f55;
+  --color-ochre: #e8892b;
+  --color-terracotta: #b8482a;
+  --color-moss: #4f7a3a;
+  --color-river: #3d7fc4;
+  --color-berry: #b23a48;
+  --color-hairline: #e3d8c4;
+
+  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --font-caption: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+
+  --radius-card: 14px;
+  --radius-button: 12px;
+}
+
+/* Night cave theme: same token names, dark values. */
+[data-theme='dark'] {
+  --color-cave-paper: #1c1815;
+  --color-bone: #26201b;
+  --color-sand: #312922;
+  --color-charcoal: #f5ede0;
+  --color-ash: #b5a898;
+  --color-ochre: #f0923a;
+  --color-hairline: #3b322a;
+}
+
+html {
+  font-size: 17px;
+}
+body {
+  margin: 0;
+  background: var(--color-cave-paper);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+/* Things you can press: 2px charcoal outline + solid "sticker" shadow; pressed = stamped in. */
+@utility sticker {
+  border: 2px solid var(--color-charcoal);
+  border-radius: var(--radius-button);
+  box-shadow: 3px 3px 0 var(--color-charcoal);
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+  &:active:not(:disabled) {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--color-charcoal);
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* Containers you only read: no heavy outline. */
+@utility panel {
+  background: var(--color-bone);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+  box-shadow: 0 2px 10px rgb(31 26 23 / 0.06);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-river);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

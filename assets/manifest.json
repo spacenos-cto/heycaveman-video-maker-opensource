@@ -1,0 +1,856 @@
+{
+ "version": 1,
+ "licence": "CC0-1.0",
+ "assets": [
+  {
+   "id": "airplane",
+   "file": "assets/airplane.svg",
+   "kind": "prop",
+   "category": "travel",
+   "names": [
+    "airplane",
+    "plane",
+    "fly",
+    "flight",
+    "flying",
+    "airport",
+    "pilot",
+    "jet"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "apple",
+   "file": "assets/apple.svg",
+   "kind": "prop",
+   "category": "food",
+   "names": [
+    "apple",
+    "fruit",
+    "healthy",
+    "snack",
+    "gravity",
+    "newton"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "arrow-down",
+   "file": "assets/arrow-down.svg",
+   "kind": "prop",
+   "category": "symbols",
+   "names": [
+    "down",
+    "fall*",
+    "drop*",
+    "decrease*",
+    "less",
+    "lower",
+    "sink*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "arrow-up",
+   "file": "assets/arrow-up.svg",
+   "kind": "prop",
+   "category": "symbols",
+   "names": [
+    "up",
+    "rise",
+    "rises",
+    "increase*",
+    "more",
+    "higher",
+    "climb*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bed",
+   "file": "assets/bed.svg",
+   "kind": "prop",
+   "category": "home",
+   "names": [
+    "bed",
+    "sleep*",
+    "rest",
+    "tired",
+    "nap",
+    "dream*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "book",
+   "file": "assets/book.svg",
+   "kind": "prop",
+   "category": "school",
+   "names": [
+    "book*",
+    "read*",
+    "story",
+    "stories",
+    "study",
+    "learn*",
+    "library",
+    "chapter",
+    "novel",
+    "page*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "briefcase",
+   "file": "assets/briefcase.svg",
+   "kind": "prop",
+   "category": "money",
+   "names": [
+    "briefcase",
+    "work",
+    "job*",
+    "business",
+    "career"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "burger",
+   "file": "assets/burger.svg",
+   "kind": "prop",
+   "category": "food",
+   "names": [
+    "burger",
+    "food",
+    "lunch",
+    "dinner",
+    "meal*",
+    "hungry",
+    "eat*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "calendar",
+   "file": "assets/calendar.svg",
+   "kind": "prop",
+   "category": "school",
+   "names": [
+    "calendar",
+    "date",
+    "day",
+    "days",
+    "week*",
+    "month*",
+    "year*",
+    "season*",
+    "schedule"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "car",
+   "file": "assets/car.svg",
+   "kind": "prop",
+   "category": "travel",
+   "names": [
+    "car",
+    "cars",
+    "drive",
+    "driving",
+    "road",
+    "travel*",
+    "journey",
+    "trip"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "chart-up",
+   "file": "assets/chart-up.svg",
+   "kind": "prop",
+   "category": "money",
+   "names": [
+    "chart",
+    "graph",
+    "data",
+    "growth",
+    "percent*",
+    "statistic*",
+    "progress",
+    "result*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "clock",
+   "file": "assets/clock.svg",
+   "kind": "prop",
+   "category": "symbols",
+   "names": [
+    "clock",
+    "time",
+    "hour*",
+    "minute*",
+    "late",
+    "early",
+    "wait*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "coffee-cup",
+   "file": "assets/coffee-cup.svg",
+   "kind": "prop",
+   "category": "food",
+   "names": [
+    "coffee",
+    "tea",
+    "cup",
+    "morning",
+    "energy"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "dumbbell",
+   "file": "assets/dumbbell.svg",
+   "kind": "prop",
+   "category": "people",
+   "names": [
+    "exercise*",
+    "muscle*",
+    "strong",
+    "strength",
+    "fitness",
+    "workout",
+    "sport*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "exclamation-mark",
+   "file": "assets/exclamation-mark.svg",
+   "kind": "prop",
+   "category": "symbols",
+   "names": [
+    "important",
+    "warning",
+    "careful",
+    "danger*",
+    "remember",
+    "attention",
+    "wow"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "gift",
+   "file": "assets/gift.svg",
+   "kind": "prop",
+   "category": "home",
+   "names": [
+    "gift*",
+    "present",
+    "birthday",
+    "surprise",
+    "sharing",
+    "give",
+    "giving"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "globe",
+   "file": "assets/globe.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "earth",
+    "world",
+    "globe",
+    "country",
+    "countries",
+    "continent*",
+    "geography",
+    "climate"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "heart",
+   "file": "assets/heart.svg",
+   "kind": "prop",
+   "category": "people",
+   "names": [
+    "heart*",
+    "love",
+    "care",
+    "kind*",
+    "feel*",
+    "blood",
+    "friend*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "house",
+   "file": "assets/house.svg",
+   "kind": "prop",
+   "category": "home",
+   "names": [
+    "house*",
+    "family",
+    "live",
+    "living",
+    "building*",
+    "roof"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "laptop",
+   "file": "assets/laptop.svg",
+   "kind": "prop",
+   "category": "school",
+   "names": [
+    "computer*",
+    "laptop",
+    "internet",
+    "code",
+    "coding",
+    "program*",
+    "screen",
+    "digital",
+    "online"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "lightbulb",
+   "file": "assets/lightbulb.svg",
+   "kind": "prop",
+   "category": "science",
+   "names": [
+    "idea*",
+    "think*",
+    "bright",
+    "invent*",
+    "electric*",
+    "smart",
+    "clever"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "magnifying-glass",
+   "file": "assets/magnifying-glass.svg",
+   "kind": "prop",
+   "category": "science",
+   "names": [
+    "search*",
+    "find*",
+    "investigate",
+    "clue*",
+    "detail*",
+    "explore*",
+    "discover*",
+    "observe*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "map-pin",
+   "file": "assets/map-pin.svg",
+   "kind": "prop",
+   "category": "travel",
+   "names": [
+    "map*",
+    "place*",
+    "location",
+    "city",
+    "town",
+    "visit*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "money-bag",
+   "file": "assets/money-bag.svg",
+   "kind": "prop",
+   "category": "money",
+   "names": [
+    "money",
+    "cash",
+    "rich",
+    "cost*",
+    "price*",
+    "buy*",
+    "sell*",
+    "pay*",
+    "save*",
+    "rupee*",
+    "dollar*",
+    "coin*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "moon",
+   "file": "assets/moon.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "moon",
+    "tide*",
+    "lunar",
+    "phase*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "phone",
+   "file": "assets/phone.svg",
+   "kind": "prop",
+   "category": "home",
+   "names": [
+    "phone*",
+    "call*",
+    "message*",
+    "mobile"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "pill",
+   "file": "assets/pill.svg",
+   "kind": "prop",
+   "category": "people",
+   "names": [
+    "medicine*",
+    "pill*",
+    "sick",
+    "doctor*",
+    "ill",
+    "cure",
+    "vitamin*",
+    "health*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "pizza",
+   "file": "assets/pizza.svg",
+   "kind": "prop",
+   "category": "food",
+   "names": [
+    "pizza",
+    "fraction*",
+    "slice*",
+    "half",
+    "party"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "planet",
+   "file": "assets/planet.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "planet*",
+    "orbit*",
+    "mars",
+    "jupiter",
+    "saturn",
+    "universe",
+    "galaxy"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "plant",
+   "file": "assets/plant.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "plant*",
+    "leaf",
+    "leaves",
+    "tree*",
+    "flower*",
+    "seed*",
+    "grow*",
+    "photosynthesis",
+    "garden*",
+    "soil",
+    "root*",
+    "nature"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "question-mark",
+   "file": "assets/question-mark.svg",
+   "kind": "prop",
+   "category": "symbols",
+   "names": [
+    "question*",
+    "wonder*",
+    "mystery",
+    "puzzle*",
+    "quiz"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "rocket",
+   "file": "assets/rocket.svg",
+   "kind": "prop",
+   "category": "science",
+   "names": [
+    "rocket*",
+    "launch*",
+    "astronaut*",
+    "blast"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "speech-bubble",
+   "file": "assets/speech-bubble.svg",
+   "kind": "prop",
+   "category": "people",
+   "names": [
+    "say*",
+    "said",
+    "speak*",
+    "word*",
+    "language*",
+    "tell*",
+    "conversation",
+    "vocabulary"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "star",
+   "file": "assets/star.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "star",
+    "stars",
+    "sun",
+    "shine*",
+    "best",
+    "great",
+    "excellent",
+    "famous"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "telescope",
+   "file": "assets/telescope.svg",
+   "kind": "prop",
+   "category": "science",
+   "names": [
+    "telescope*",
+    "sky",
+    "astronomy",
+    "far"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "trophy",
+   "file": "assets/trophy.svg",
+   "kind": "prop",
+   "category": "school",
+   "names": [
+    "win*",
+    "trophy",
+    "prize*",
+    "champion*",
+    "success*",
+    "goal*",
+    "achieve*",
+    "victory"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "water-bottle",
+   "file": "assets/water-bottle.svg",
+   "kind": "prop",
+   "category": "food",
+   "names": [
+    "water",
+    "drink*",
+    "bottle*",
+    "thirst*",
+    "hydrat*",
+    "liquid*",
+    "rain*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "weighing-scale",
+   "file": "assets/weighing-scale.svg",
+   "kind": "prop",
+   "category": "science",
+   "names": [
+    "weight*",
+    "weigh*",
+    "mass",
+    "heavy",
+    "balance*",
+    "measure*",
+    "kilogram*",
+    "gram*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-airport",
+   "file": "assets/bg-airport.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "airport",
+    "airports"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-bank",
+   "file": "assets/bg-bank.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "bank",
+    "banks"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-beach",
+   "file": "assets/bg-beach.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "beach*",
+    "sea",
+    "ocean*",
+    "sand",
+    "coast*",
+    "holiday*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-bedroom",
+   "file": "assets/bg-bedroom.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "bedroom*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-cafe",
+   "file": "assets/bg-cafe.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "cafe",
+    "restaurant*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-city-street",
+   "file": "assets/bg-city-street.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "city",
+    "cities",
+    "street*",
+    "traffic"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-classroom",
+   "file": "assets/bg-classroom.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "classroom*",
+    "school*",
+    "class",
+    "teacher*",
+    "lesson*",
+    "student*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-gym",
+   "file": "assets/bg-gym.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "gym*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-hospital",
+   "file": "assets/bg-hospital.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "hospital*",
+    "nurse*",
+    "patient*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-kitchen",
+   "file": "assets/bg-kitchen.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "kitchen*",
+    "cook*",
+    "recipe*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-lab",
+   "file": "assets/bg-lab.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "lab",
+    "labs",
+    "laboratory",
+    "experiment*",
+    "scientist*",
+    "chemistry"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-living-room",
+   "file": "assets/bg-living-room.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "home",
+    "living room"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-mountains",
+   "file": "assets/bg-mountains.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "mountain*",
+    "hill*",
+    "valley*",
+    "river*",
+    "forest*",
+    "volcano*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-night-sky",
+   "file": "assets/bg-night-sky.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "night*",
+    "sky",
+    "stars",
+    "dark"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-office",
+   "file": "assets/bg-office.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "office*",
+    "meeting*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-park",
+   "file": "assets/bg-park.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "park*",
+    "outside",
+    "outdoor*",
+    "playground*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-space",
+   "file": "assets/bg-space.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "space",
+    "universe",
+    "galaxy",
+    "astronaut*",
+    "orbit*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-stage",
+   "file": "assets/bg-stage.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "stage",
+    "show*",
+    "perform*",
+    "theatre",
+    "theater",
+    "concert*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "bg-store",
+   "file": "assets/bg-store.svg",
+   "kind": "setting",
+   "category": "settings",
+   "names": [
+    "shop*",
+    "store*",
+    "market*"
+   ],
+   "kidSafeReviewed": true
+  }
+ ]
+}
