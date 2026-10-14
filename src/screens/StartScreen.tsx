@@ -5,14 +5,21 @@ import { containsLink, countWords, isTopicOnly } from '../director/clean';
 import { estimateSeconds } from '../director/timing';
 import { EXAMPLE_LESSON } from '../data/examples';
 import { en } from '../i18n/en';
-import { useApp } from '../store/app';
+import { DEFAULTS, useApp } from '../store/app';
+import { newProject } from '../director';
+import { blankProject } from '../editor/sceneOps';
 import { Button } from '../ui/Button';
 
 const WARN_WORDS = 1500;
 const MAX_WORDS = 3000;
 
 export function StartScreen() {
-  const { draft, setDraft, go, projects, openProject, project, setRemakeId } = useApp();
+  const { draft, setDraft, go, projects, openProject, project, setRemakeId, setProject } = useApp();
+  const startBlank = () => {
+    setProject(blankProject(newProject('', DEFAULTS)));
+    useApp.setState({ editorStart: 0 });
+    go('editor');
+  };
   const [askRemake, setAskRemake] = useState(false);
   const recent = projects.find((p) => !p.deletedAt);
   const [note, setNote] = useState<string | null>(null);
@@ -118,9 +125,12 @@ export function StartScreen() {
         {en.make} <Play size={20} fill="currentColor" aria-hidden="true" />
       </Button>
       {words === 0 && <p className="mt-2 text-center text-sm text-ash">{en.makeHint}</p>}
+      <p className="mt-3 text-center">
+        <Button variant="ghost" onClick={startBlank}>{en.editor.blank}</Button>
+      </p>
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>
-    {askRemake && project && (
+      {askRemake && project && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={() => setAskRemake(false)}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="remake-title" aria-describedby="remake-body" className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && setAskRemake(false)}>
             <h2 id="remake-title" className="font-display text-2xl font-bold">{en.remake.title}</h2>

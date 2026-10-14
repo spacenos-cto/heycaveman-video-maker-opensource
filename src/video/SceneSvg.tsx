@@ -3,6 +3,7 @@
 // (devpost/spec.md > Video scene renderer (SVG)).
 import { CavemanRig } from '../caveman/CavemanRig';
 import { assetById } from '../director/props';
+import { isUpload, uploadHref, uploadRef } from '../editor/uploads';
 import type { Caption, Project, Scene, Shape } from '../types';
 import { MOODS, type MoodSpec } from './moods';
 import { spring } from './spring';
@@ -29,9 +30,34 @@ export type SceneSvgProps = {
   embeddedCss?: string;
   className?: string;
   title?: string;
+  /** Editor stage: drawings sit still and hidden ones show faintly so they can be picked. */
+  editing?: boolean;
 };
 
-const defaultHref = (file: string) => `/${file}`;
+const defaultHref = (file: string) => (isUpload(file) ? uploadHref(file) : `/${file}`);
+
+/** The drawing file (or uploaded picture reference) behind a prop. */
+export const propFile = (assetId: string) => (isUpload(assetId) ? assetId : assetById(assetId)?.file);
+
+const msAt = (frame: number) => (frame / FPS) * 1000;
+export const propVisible = (p: { inMs?: number; outMs?: number }, frame: number) =>
+  msAt(frame) >= (p.inMs ?? 0) && (p.outMs === undefined || msAt(frame) < p.outMs);
+export const captionVisible = (c: Caption, frame: number) =>
+  msAt(frame) >= (c.startMs ?? 0) && (c.endMs === undefined || msAt(frame) < c.endMs);
+
+/** The caveman's spot in a scene as a placement (% of frame): feet centre, height, turn. */
+export function cavemanAt(project: Project, scene: Scene) {
+  const spot = CAVEMAN_SPOT[project.shape];
+  return scene.cavemanAt ?? { x: scene.props.length ? spot.withProps : spot.x, y: spot.feet, scale: spot.height, rotation: 0 };
+}
+
+/** The same in frame pixels, with the rig's width. */
+export function cavemanBox(project: Project, scene: Scene) {
+  const { width, height } = SIZES[project.shape];
+  const at = cavemanAt(project, scene);
+  const h = (at.scale / 100) * height;
+  return { cx: (at.x / 100) * width, feet: (at.y / 100) * height, h, w: h * (200 / 320), rotation: at.rotation };
+}
 
 /** Break caption words into lines that fit 88% of the frame width (estimated glyph width). */
 function wrap(words: string[], fontSize: number, maxWidth: number): string[][] {
@@ -59,13 +85,16 @@ const CAPTION_STYLES: Record<NonNullable<Caption['style']>, { fill: string; stro
 
 const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
-function CaptionText({ caption, mood, shape, frame, width, height }: { caption: Caption; mood: MoodSpec; shape: Shape; frame: number; width: number; height: number }) {
-  const short = Math.min(width, height);
-  const size = Math.round(short * (caption.wordArt ? 0.1 : 0.075));
-  const enter = Math.min(1, spring(frame + 1, FPS, 14, 200));
+function captionLayout(caption: Caption, width: number, height: number) {
+  const size = Math.round(Math.min(width, height) * (caption.wordArt ? 0.1 : 0.075));
   const lines = wrap(caption.text.split(/\s+/).filter(Boolean), size, width * 0.88);
-  const lineH = size * 1.08;
-  const bottom = height * (shape === 'tall' ? 0.84 : 0.93);
+  return { size, lines, lineH: size * 1.08 };
+}
+
+function CaptionText({ caption, mood, shape, frame, width, height, lift }: { caption: Caption; mood: MoodSpec; shape: Shape; frame: number; width: number; height: number; lift: number }) {
+  const { size, lines, lineH } = captionLayout(caption, width, height);
+  const enter = Math.min(1, spring(frame + 1, FPS, 14, 200));
+  const bottom = height * (shape === 'tall' ? 0.84 : 0.93) - lift;
   const kw = caption.keyword ? norm(caption.keyword) : undefined;
   // A chosen caption colour wins over the mood; otherwise the mood decides (devpost/prd.md > F8 Caption).
   const look = caption.style ? CAPTION_STYLES[caption.style] : undefined;
@@ -134,16 +163,25 @@ function EndCard({ project, frame, width, height, hrefFor }: { project: Project;
   );
 }
 
-export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, embeddedCss, className, title }: SceneSvgProps) {
+export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, embeddedCss, className, title, editing }: SceneSvgProps) {
   const { width, height } = SIZES[project.shape];
   const mood = MOODS[project.mood];
-  const spot = CAVEMAN_SPOT[project.shape];
-  const rigH = (spot.height / 100) * height;
-  const rigW = rigH * (200 / 320);
-  const cx = ((scene.props.length ? spot.withProps : spot.x) / 100) * width;
-  const feet = (spot.feet / 100) * height;
+  const { cx, feet, h: rigH, w: rigW, rotation: rigTurn } = cavemanBox(project, scene);
   const bg = scene.background;
   const setting = bg.type === 'setting' ? assetById(bg.assetId) : undefined;
+  // Captions showing now stack upwards from the bottom, so two at once never overlap.
+  let lift = 0;
+  const captions = scene.captions
+    .map((c, i) => ({ c, i, on: captionVisible(c, frame) }))
+    .filter((x) => x.on || editing)
+    .map((x) => {
+      const at = lift;
+      if (x.on) {
+        const { lines, lineH, size } = captionLayout(x.c, width, height);
+        lift += lines.length * lineH + size * 0.35;
+      }
+      return { ...x, at };
+    });
 
   return (
     <svg
@@ -154,7 +192,7 @@ export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, 
       height={height}
       className={className}
       role="img"
-      aria-label={title ?? (scene.words || 'End card')}
+      aria-label={title ?? (scene.words || (scene.kind === 'end' ? 'End card' : 'Scene'))}
       data-testid="scene-svg"
       style={{ display: 'block', width: '100%', height: 'auto' }}
     >
@@ -163,25 +201,27 @@ export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, 
         <EndCard project={project} frame={frame} width={width} height={height} hrefFor={hrefFor} />
       ) : (
         <>
-          {setting ? (
-            <image href={hrefFor(setting.file)} x={0} y={0} width={width} height={height} preserveAspectRatio="xMidYMid slice" />
+          {setting || bg.type === 'upload' ? (
+            <image href={hrefFor(setting ? setting.file : uploadRef(bg.type === 'upload' ? bg.blobId : '')) || undefined} x={0} y={0} width={width} height={height} preserveAspectRatio="xMidYMid slice" />
           ) : (
             <rect width={width} height={height} fill={bg.type === 'color' ? bg.color : mood.backgrounds[0]} />
           )}
           {scene.props.map((p, i) => {
-            const asset = assetById(p.assetId);
-            if (!asset) return null;
+            const file = propFile(p.assetId);
+            const on = propVisible(p, frame);
+            if (!file || (!on && !editing)) return null;
             const size = (p.scale / 100) * height;
-            const pop = Math.max(0, spring(frame - 4 - i * 6, FPS, 10, 220));
-            const float = Math.sin((frame + i * 20) / 18) * height * 0.006;
+            const inFrame = ((p.inMs ?? 0) / 1000) * FPS;
+            const pop = editing ? 1 : Math.max(0, spring(frame - inFrame - 4 - (p.inMs ? 0 : i * 6), FPS, 10, 220));
+            const float = editing ? 0 : Math.sin((frame + i * 20) / 18) * height * 0.006;
             return (
-              <g key={`${p.assetId}-${i}`} transform={`translate(${(p.x / 100) * width} ${(p.y / 100) * height + float}) rotate(${p.rotation}) scale(${pop})`} data-testid="prop" data-asset={p.assetId}>
-                <image href={hrefFor(asset.file)} x={-size / 2} y={-size / 2} width={size} height={size} />
+              <g key={`${p.assetId}-${i}`} opacity={on ? 1 : 0.3} transform={`translate(${(p.x / 100) * width} ${(p.y / 100) * height + float}) rotate(${p.rotation}) scale(${pop})`} data-testid="prop" data-asset={p.assetId}>
+                <image href={hrefFor(file) || undefined} x={-size / 2} y={-size / 2} width={size} height={size} />
               </g>
             );
           })}
           {!scene.hideCaveman && (
-            <g transform={`translate(${cx - rigW / 2} ${feet - rigH}) scale(${rigH / 320})`}>
+            <g transform={`rotate(${rigTurn} ${cx} ${feet}) translate(${cx - rigW / 2} ${feet - rigH}) scale(${rigH / 320})`}>
               <CavemanRig
                 design={project.caveman}
                 motion={scene.motion}
@@ -192,8 +232,10 @@ export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, 
               />
             </g>
           )}
-          {scene.captions.map((c, i) => (
-            <CaptionText key={i} caption={c} mood={mood} shape={project.shape} frame={frame} width={width} height={height} />
+          {captions.map(({ c, i, at, on }) => (
+            <g key={i} opacity={on ? 1 : 0}>
+              <CaptionText caption={c} mood={mood} shape={project.shape} frame={editing ? 30 : frame - ((c.startMs ?? 0) / 1000) * FPS} width={width} height={height} lift={at} />
+            </g>
           ))}
         </>
       )}

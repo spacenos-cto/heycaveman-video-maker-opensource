@@ -1,5 +1,6 @@
 // An SVG painted onto a canvas can't load outside files, so for export every drawing and the caption
 // font are turned into data URIs once, from this app's own bundled files (nothing leaves the device).
+import { isUpload, uploadDataUri } from '../editor/uploads';
 import captionFontUrl from '@fontsource/baloo-2/files/baloo-2-latin-800-normal.woff2?url';
 
 const cache = new Map<string, Promise<string>>();
@@ -28,7 +29,7 @@ function dataUri(url: string, mime: string): Promise<string> {
 /** href resolver for SceneSvg during export: every file the video uses, as a data URI. */
 export async function embeddedHrefs(files: string[]): Promise<(file: string) => string> {
   const unique = [...new Set(files)];
-  const uris = await Promise.all(unique.map((f) => dataUri(`/${f}`, 'image/svg+xml')));
+  const uris = await Promise.all(unique.map((f) => (isUpload(f) ? uploadDataUri(f) : dataUri(`/${f}`, 'image/svg+xml'))));
   const map = new Map(unique.map((f, i) => [f, uris[i]]));
   return (file) => map.get(file) ?? '';
 }

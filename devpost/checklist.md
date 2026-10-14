@@ -102,7 +102,7 @@ Build mode: fast
   Learner check: Make a video, tap scene 2, change his action to "celebrate", swap a prop, and edit the caption. Try undo. Could a teacher do it in under 30 seconds?
   Commit: `Add quick scene editing with undo and redo`
 
-- [ ] **6. The Editor for hand-made scenes**
+- [x] **6. The Editor for hand-made scenes**
   Becomes usable:
     - The Editor: a scene list with drag-to-reorder and durations.
     - The stage: drag, resize and rotate props and the caveman with snap guides, and when each prop appears and disappears.
@@ -201,3 +201,4 @@ Activity mode:
 - Slice 4 measured: offline voicing about 23 s per scene on a cold start (warm-up added when the panel opens); recording tests use Chromium's fake microphone, split into two files because launch flags must be top-level.
 - Reordered on the learner's request ("allow users to edit the video scenes"): Tap a scene (was 7) and the Editor (was 8) now come right after voices as slices 5 and 6; Meet your caveman and Teacher tools move to 7 and 8. No scope change.
 - Slice 5: on phones the scene panel sits under the video, so the video now stays pinned at the top while a scene is open; caption colours (Yellow/Red/White/Outlined) are drawn by the renderer and override the mood. Re-make of an edited video replaces it in place, and one Undo brings the edits back.
+- Slice 6: the Editor's Character button (F9.5) opens the caveman designer, which is built in slice 7, so it moves there. The "Need more pictures? HeyCaveman…" line at the end of the library moves to slice 9 with the other premium mentions. Uploaded pictures are stored as WebP (keeps transparency) and travel in .caveman files as images/<id>.webp. Found while testing: opening a .caveman file lost voiceId/voiceSpeed (they were treated as unknown fields); fixed. A drawing can no longer be wider than a tall frame.

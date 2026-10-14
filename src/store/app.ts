@@ -7,9 +7,10 @@ import { storage, storageBlocked } from '../storage/db';
 import { packProject, projectFileName, unpackProject } from '../storage/projectFile';
 import { claimProject, releaseProject } from '../storage/tabs';
 import type { Project } from '../types';
+import { loadUploads, uploadIds } from '../editor/uploads';
 import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './history';
 
-export type Screen = 'start' | 'making' | 'player' | 'videos';
+export type Screen = 'start' | 'making' | 'player' | 'editor' | 'videos';
 
 const DRAFT_KEY = 'stoneage.draft';
 const AUTOSAVE_MS = 300;
@@ -32,6 +33,8 @@ type AppState = {
   history: History;
   /** Set when Make should replace this edited video in place (the Re-make prompt said yes). */
   remakeId: string | null;
+  /** Which scene the Editor opens on. */
+  editorStart: number;
   setDraft: (text: string) => void;
   go: (screen: Screen) => void;
   /** Replace the open project (auto-saved). Changes to the same video can be undone; `key` merges typing into one step. */
@@ -88,6 +91,7 @@ export const useApp = create<AppState>((set, get) => ({
   notice: null,
   history: emptyHistory(),
   remakeId: null,
+  editorStart: 0,
   setDraft: (draft) => {
     try {
       localStorage.setItem(DRAFT_KEY, draft);
@@ -97,7 +101,7 @@ export const useApp = create<AppState>((set, get) => ({
     set({ draft });
   },
   go: (screen) => {
-    if (screen !== 'player') {
+    if (screen !== 'player' && screen !== 'editor') {
       releaseProject();
       if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     }
@@ -112,6 +116,7 @@ export const useApp = create<AppState>((set, get) => ({
     set({ project });
     if (!project) return;
     if (isNew) {
+      void loadUploads(project);
       if (location.hash !== `#project=${project.id}`) history.replaceState(null, '', `#project=${project.id}`);
       void claimProject(project.id).then((busy) => {
         set({ readOnly: busy });
@@ -175,12 +180,18 @@ export const useApp = create<AppState>((set, get) => ({
         const blob = s.voice.blobId ? await db.getBlob(s.voice.blobId) : undefined;
         if (blob && s.voice.blobId) audio[s.voice.blobId] = new Uint8Array(await blob.arrayBuffer());
       }
-      download(packProject(project, audio), projectFileName(project.title), 'application/zip');
+      const images: Record<string, Uint8Array> = {};
+      for (const id of uploadIds(project)) {
+        const blob = await db.getBlob(id);
+        if (blob) images[id] = new Uint8Array(await blob.arrayBuffer());
+      }
+      download(packProject(project, audio, images), projectFileName(project.title), 'application/zip');
     })(),
   openProjectFile: async (file) => {
-    const { project, newer, audio } = unpackProject(new Uint8Array(await file.arrayBuffer()));
+    const { project, newer, audio, images } = unpackProject(new Uint8Array(await file.arrayBuffer()));
     const db = await storage();
     for (const [id, bytes] of Object.entries(audio)) await db.putBlob(id, new Blob([bytes as BlobPart], { type: 'audio/wav' }));
+    for (const [id, bytes] of Object.entries(images)) await db.putBlob(id, new Blob([bytes as BlobPart], { type: 'image/webp' }));
     // Opening someone else's copy of a project you already have makes a separate copy, never overwrites.
     const existing = await db.getProject(project.id);
     const p = existing ? { ...project, id: newId(), updatedAt: Date.now() } : { ...project, updatedAt: Date.now() };

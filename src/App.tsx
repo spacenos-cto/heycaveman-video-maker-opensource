@@ -6,6 +6,7 @@ import { en } from './i18n/en';
 import { installApp, useOffline } from './offline/status';
 import { MakingScreen } from './screens/MakingScreen';
 import { PlayerScreen } from './screens/PlayerScreen';
+import { EditorScreen } from './editor/EditorScreen';
 import { StartScreen } from './screens/StartScreen';
 import { VideosPage } from './screens/VideosPage';
 import { purgeOldDeleted } from './storage/db';
@@ -50,6 +51,7 @@ export function App() {
       {screen === 'start' && <StartScreen />}
       {screen === 'making' && <MakingScreen />}
       {screen === 'player' && <PlayerScreen />}
+      {screen === 'editor' && <EditorScreen />}
       {screen === 'videos' && <VideosPage />}
     </div>
   );

@@ -97,7 +97,8 @@ function PropSearch({ onAdd, full }: { onAdd: (id: string) => void; full: boolea
   );
 }
 
-export function ScenePanel({ index, onSelect, onClose }: { index: number; onSelect: (i: number) => void; onClose: () => void }) {
+/** `onClose` absent = shown inside the Editor, which has its own heading and undo buttons. */
+export function ScenePanel({ index, onSelect, onClose }: { index: number; onSelect: (i: number) => void; onClose?: () => void }) {
   const { project, setProject, undo, redo, history, readOnly } = useApp();
   const [adding, setAdding] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -129,7 +130,8 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
   const chip = (selected: boolean) => `rounded-full border-2 px-3 py-1 text-sm ${selected ? 'border-ochre bg-sand' : 'border-hairline bg-bone'}`;
 
   return (
-    <aside className="panel flex max-h-[calc(100vh-2rem)] flex-col p-0 lg:sticky lg:top-4" aria-labelledby="scene-panel-title" data-testid="scene-panel" data-scene-panel>
+    <aside className="panel flex max-h-[calc(100vh-2rem)] flex-col p-0 lg:sticky lg:top-4" aria-labelledby={onClose ? 'scene-panel-title' : undefined} aria-label={onClose ? undefined : t.title(index + 1)} data-testid="scene-panel" data-scene-panel>
+      {onClose && (
       <div className="flex items-center gap-2 border-b-2 border-charcoal px-4 py-3">
         <h2 id="scene-panel-title" className="flex-1 font-display text-xl font-bold">{t.title(index + 1)}</h2>
         <button type="button" onClick={undo} disabled={!history.past.length || readOnly} className="rounded-[10px] p-1.5 disabled:opacity-30" aria-label={t.undo} title={`${t.undo} (Ctrl+Z)`}>
@@ -142,6 +144,7 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
           <X size={20} aria-hidden="true" />
         </button>
       </div>
+      )}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
       <fieldset disabled={readOnly} className="min-w-0 space-y-4 px-4 pb-5 pt-3">

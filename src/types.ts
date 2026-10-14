@@ -31,6 +31,8 @@ export type Caption = {
   keyword?: string; // the word shown in the mood's highlight colour
   wordArt?: boolean; // numbers / equations drawn as big word-art
   style?: 'yellow' | 'red' | 'white' | 'outlined';
+  startMs?: number; // when it shows, within the scene (default: from the start)
+  endMs?: number; // when it goes (default: to the end)
 };
 
 /** Position, size and rotation are percentages of the frame so they survive shape switches. */
@@ -40,7 +42,15 @@ export type PropPlacement = {
   y: number; // centre, % of frame height
   scale: number; // height, % of frame height
   rotation: number;
+  inMs?: number; // when it pops in, within the scene
+  outMs?: number; // when it leaves
 };
+
+/** Where the caveman stands in one scene, set by hand in the Editor: feet centre and height, % of frame. */
+export type CavemanPlacement = { x: number; y: number; scale: number; rotation: number };
+
+/** Uploaded pictures are referenced as `upload:<blob id>` wherever a drawing id goes. */
+export const UPLOAD_PREFIX = 'upload:';
 
 export type Background =
   | { type: 'color'; color: string; manual?: boolean }
@@ -57,6 +67,7 @@ export type Scene = {
   motion: MotionId;
   expression: ExpressionId;
   hideCaveman?: boolean;
+  cavemanAt?: CavemanPlacement;
   background: Background;
   props: PropPlacement[];
   sfx?: string;

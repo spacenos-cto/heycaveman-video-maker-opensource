@@ -2,8 +2,9 @@
 // copy, so the undo history can keep every step and the player redraws straight away.
 import { PROP_SLOTS } from '../director/props';
 import { MIN_SCENE_MS, sceneDuration } from '../director/timing';
-import type { Caption, Project, Scene } from '../types';
+import type { CavemanPlacement, Caption, PropPlacement, Project, Scene, Shape } from '../types';
 import { MOODS } from '../video/moods';
+import { SIZES } from '../video/timeline';
 
 export const MAX_PROPS = 6;
 
@@ -108,4 +109,97 @@ export function removeProp(project: Project, index: number, propIndex: number): 
   const scene = project.scenes[index];
   if (!scene) return project;
   return editScene(project, index, { props: scene.props.filter((_, i) => i !== propIndex) });
+}
+
+// ---- The Editor (devpost/prd.md > F9) ----
+
+export const MIN_EDIT_MS = 1000;
+export const MAX_EDIT_MS = 30_000;
+
+/** Drag a scene from one place in the list to another. */
+export function reorderScene(project: Project, from: number, to: number): Project {
+  if (from === to || from < 0 || to < 0 || from >= project.scenes.length || to >= project.scenes.length) return project;
+  const scenes = [...project.scenes];
+  const [moved] = scenes.splice(from, 1);
+  scenes.splice(to, 0, moved);
+  return withScenes(project, scenes);
+}
+
+/** Scene length by hand; only without a voice (a voice sets its own length). */
+export function setDuration(project: Project, index: number, ms: number): Project {
+  const scene = project.scenes[index];
+  if (!scene || scene.voice.type !== 'none') return project;
+  return editScene(project, index, { durationMs: Math.round(Math.min(MAX_EDIT_MS, Math.max(MIN_EDIT_MS, ms))) });
+}
+
+export function setProp(project: Project, index: number, propIndex: number, patch: Partial<PropPlacement>): Project {
+  const scene = project.scenes[index];
+  if (!scene?.props[propIndex]) return project;
+  const props = scene.props.map((p, i) => (i === propIndex ? { ...p, ...patch } : p));
+  return editScene(project, index, { props });
+}
+
+export function setCavemanAt(project: Project, index: number, at: CavemanPlacement | undefined): Project {
+  return editScene(project, index, { cavemanAt: at });
+}
+
+export function addCaption(project: Project, index: number, text = 'New caption'): Project {
+  const scene = project.scenes[index];
+  if (!scene) return project;
+  const startMs = scene.captions.length ? Math.round(scene.durationMs / 2) : 0;
+  return editScene(project, index, { captions: [...scene.captions, { text, startMs }] });
+}
+
+export function editCaptionAt(project: Project, index: number, captionIndex: number, patch: Partial<Caption>): Project {
+  const scene = project.scenes[index];
+  if (!scene?.captions[captionIndex]) return project;
+  const captions = scene.captions.map((c, i) => {
+    if (i !== captionIndex) return c;
+    const next = { ...c, ...patch };
+    if (patch.text !== undefined) next.wordArt = false;
+    return next;
+  });
+  return editScene(project, index, { captions });
+}
+
+export function removeCaption(project: Project, index: number, captionIndex: number): Project {
+  const scene = project.scenes[index];
+  if (!scene) return project;
+  return editScene(project, index, { captions: scene.captions.filter((_, i) => i !== captionIndex) });
+}
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+/** Keep a drawing fully inside a frame of this shape (its size is a % of frame height). */
+export function clampProp(p: PropPlacement, shape: Shape): PropPlacement {
+  const { width, height } = SIZES[shape];
+  const scale = clamp(p.scale, 4, Math.min(100, (width / height) * 100)); // never wider than the frame
+  const halfW = ((scale / 100) * height * 0.5 * 100) / width; // half its width, as % of frame width
+  const halfH = scale / 2;
+  return { ...p, scale, x: clamp(p.x, Math.min(50, halfW), Math.max(50, 100 - halfW)), y: clamp(p.y, Math.min(50, halfH), Math.max(50, 100 - halfH)) };
+}
+
+export function clampCaveman(at: CavemanPlacement): CavemanPlacement {
+  return { ...at, scale: clamp(at.scale, 15, 95), x: clamp(at.x, 5, 95), y: clamp(at.y, at.scale * 0.5, 100) };
+}
+
+/** Switch the video's shape; every hand-placed item stays inside the new frame. */
+export function switchShape(project: Project, shape: Shape): Project {
+  return {
+    ...project,
+    shape,
+    scenes: project.scenes.map((s) => ({ ...s, props: s.props.map((p) => clampProp(p, shape)), cavemanAt: s.cavemanAt && clampCaveman(s.cavemanAt) })),
+    updatedAt: Date.now(),
+  };
+}
+
+/** Add an uploaded picture as a drawing. */
+export function addPicture(project: Project, index: number, ref: string): Project {
+  return addProp(project, index, ref);
+}
+
+/** A video with one blank scene, for building by hand in the Editor (devpost/prd.md > F9 Acceptance). */
+export function blankProject(made: Project): Project {
+  const empty: Project = { ...made, title: 'My new video', scenes: [], sourceText: '' };
+  return { ...addSceneAfter(empty, -1), edited: false };
 }

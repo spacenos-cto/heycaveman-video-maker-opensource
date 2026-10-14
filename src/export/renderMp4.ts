@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AudioBufferSource, BufferTarget, CanvasSource, Mp4OutputFormat, Output, QUALITY_HIGH, QUALITY_MEDIUM } from 'mediabunny';
 import { hasVoices } from '../audio/sounds';
 import { assetById } from '../director/props';
+import { uploadRef } from '../editor/uploads';
+import { propFile } from '../video/SceneSvg';
 import type { Project } from '../types';
 import { SceneSvg } from '../video/SceneSvg';
 import { FPS, locate, timeline } from '../video/timeline';
@@ -57,7 +59,8 @@ export async function renderMp4(
 
   const tl = timeline(project);
   const files = tl.scenes.flatMap((s) => [
-    ...s.props.map((p) => assetById(p.assetId)?.file ?? ''),
+    ...s.props.map((p) => propFile(p.assetId) ?? ''),
+    ...(s.background.type === 'upload' ? [uploadRef(s.background.blobId)] : []),
     ...(s.background.type === 'setting' ? [assetById(s.background.assetId)?.file ?? ''] : []),
   ]);
   const [hrefFor, fontCss] = await Promise.all([embeddedHrefs([...files.filter(Boolean), 'icons/logo.svg']), embeddedFontCss()]);
