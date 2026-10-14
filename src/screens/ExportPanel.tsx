@@ -157,7 +157,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
               </g>
             </svg>
             <div className="h-3 w-full overflow-hidden rounded-full border-2 border-charcoal bg-bone" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={en.exportPanel.progress}>
-              <div className="h-full bg-[linear-gradient(90deg,#ffc15e,#ff4f8b,#c94dff)] transition-[width] duration-300" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-ember transition-[width] duration-300" style={{ width: `${pct}%` }} />
             </div>
             <p className="mt-2 text-sm text-ash" data-testid="export-status">
               {pct}% {progress?.etaMs != null ? `· ${en.exportPanel.timeLeft(fmtMs(progress.etaMs))}` : ''}

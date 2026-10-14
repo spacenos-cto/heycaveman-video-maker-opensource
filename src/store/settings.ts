@@ -24,7 +24,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   classroomMode: false,
-  theme: 'dark',
+  theme: 'light',
   uiSounds: true,
   defaults: { shape: 'wide', mood: 'bright', sfxLevel: 'gentle', endCard: true, readingSpeed: 'normal' },
   dismissed: {},

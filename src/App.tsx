@@ -28,16 +28,9 @@ export function App() {
   const uiSounds = useSettings((s) => s.uiSounds);
   const theme = useSettings((s) => s.theme);
 
-  // Appearance: dark (default), light, or follow the device.
+  // Appearance (Settings): the paper look is the one design for now.
   useEffect(() => {
-    const apply = () => {
-      const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    };
-    apply();
-    const mq = matchMedia('(prefers-color-scheme: dark)');
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    document.documentElement.dataset.theme = 'light';
   }, [theme]);
 
   // A soft tick for every press, a whoosh between screens.
@@ -58,41 +51,41 @@ export function App() {
     if (id) void useApp.getState().openProject(id);
   }, []);
 
+  const pill = 'flex h-11 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-4 text-[13px] font-extrabold uppercase tracking-[0.035em] transition-transform duration-200 hover:-rotate-2 hover:bg-sun';
   return (
-    <div className="min-h-screen">
-      <div className="sky" aria-hidden="true">
-        <div className="aurora a1" />
-        <div className="aurora a2" />
-        <div className="aurora a3" />
-        <div className="aurora a4" />
-        <div className="stars" />
-        <div className="grain" />
+    <div className="frame">
+      <div className="sheet">
+      <div className="marquee" aria-hidden="true">
+        <div>
+          {Array.from({ length: 2 }, (_, k) => en.marquee.map((m, i) => <span key={`${k}-${i}`}>{m} ✦</span>))}
+        </div>
       </div>
-      <header className="sticky top-0 z-40 border-b border-hairline bg-[rgb(7_7_13/0.55)] backdrop-blur-xl [[data-theme=light]_&]:bg-[rgb(245_242_255/0.6)]">
-        <div className="mx-auto flex max-w-[1100px] items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => go('start')} className="flex items-center gap-2 rounded-[12px]" aria-label="HeyCaveman Stone Age — home">
-            <Logo />
-            <span className="font-display text-lg font-bold">{en.appName}</span>
-            <span className="hidden whitespace-nowrap rounded-full border border-hairline bg-bone px-2.5 py-0.5 font-display text-[10px] sm:inline font-semibold uppercase tracking-[0.18em] text-terracotta">{en.edition}</span>
+      <header className="relative z-40">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-2 px-3 py-3 sm:px-6">
+          <button type="button" onClick={() => go('start')} className="wiggle flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-black bg-white" aria-label="HeyCaveman Stone Age — home">
+            <Logo size={34} />
           </button>
-          <nav className="ml-auto flex items-center gap-1.5 sm:gap-3" aria-label="Main">
+          <button type="button" onClick={() => go('start')} className="ml-1 hidden font-display text-2xl leading-none sm:block" tabIndex={-1} aria-hidden="true">
+            {en.appName} <span className="text-violet">{en.edition}</span>
+          </button>
+          <nav className="ml-auto flex items-center gap-1.5" aria-label="Main">
             <OfflineIndicator />
-            <button type="button" disabled={!settingsLoaded} onClick={() => setEditMine(true)} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[conic-gradient(from_200deg,#ffc15e,#ff4f8b,#c94dff,#3df5ff,#ffc15e)] p-[2px] transition-transform hover:scale-110" aria-label={en.caveman.avatar} title={en.caveman.avatar} data-testid="my-caveman">
-              <svg viewBox="30 10 140 140" className="rig-stage h-full w-full rounded-full" aria-hidden="true">
+            <button type="button" onClick={() => useSettings.getState().update({ uiSounds: !uiSounds })} className={`${pill} w-11 px-0`} aria-label={uiSounds ? en.uiSoundsOff : en.uiSoundsOn} aria-pressed={uiSounds} title={uiSounds ? en.uiSoundsOff : en.uiSoundsOn}>
+              {uiSounds ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
+            </button>
+            <button type="button" disabled={!settingsLoaded} onClick={() => setEditMine(true)} className="wiggle flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-black bg-lavender" aria-label={en.caveman.avatar} title={en.caveman.avatar} data-testid="my-caveman">
+              <svg viewBox="30 10 140 140" className="h-full w-full" aria-hidden="true">
                 <CavemanRig design={myCaveman ?? CAVEY} motion="idle" expression="happy" frame={0} talking={false} />
               </svg>
             </button>
-            <button type="button" onClick={() => useSettings.getState().update({ uiSounds: !uiSounds })} className="flex h-10 w-10 items-center justify-center rounded-full text-ash hover:bg-bone hover:text-charcoal" aria-label={uiSounds ? en.uiSoundsOff : en.uiSoundsOn} aria-pressed={uiSounds} title={uiSounds ? en.uiSoundsOff : en.uiSoundsOn}>
-              {uiSounds ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
-            </button>
-            <button type="button" onClick={() => go('videos')} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 font-display text-sm font-semibold hover:bg-bone" aria-current={screen === 'videos' ? 'page' : undefined} aria-label={en.videos.nav}>
-              <Film size={18} aria-hidden="true" /> <span className="hidden sm:inline">{en.videos.nav}</span>
-            </button>
             {canInstall && (
-              <button type="button" onClick={() => void installApp()} className="sticker flex items-center gap-1.5 bg-bone px-3 py-1 font-display font-semibold">
+              <button type="button" onClick={() => void installApp()} className={`${pill} hidden sm:flex`}>
                 <Download size={16} aria-hidden="true" /> {en.offline.install}
               </button>
             )}
+            <button type="button" onClick={() => go('videos')} className="flex h-11 items-center gap-1.5 rounded-full bg-black px-4 text-[13px] font-extrabold uppercase tracking-[0.035em] text-white transition-transform duration-200 hover:-rotate-2 hover:bg-ember hover:text-black" aria-current={screen === 'videos' ? 'page' : undefined} aria-label={en.videos.nav}>
+              <Film size={17} aria-hidden="true" /> <span className="hidden sm:inline">{en.videos.nav}</span>
+            </button>
           </nav>
         </div>
       </header>
@@ -115,6 +108,7 @@ export function App() {
         {screen === 'player' && <PlayerScreen />}
         {screen === 'editor' && <EditorScreen />}
         {screen === 'videos' && <VideosPage />}
+      </div>
       </div>
     </div>
   );

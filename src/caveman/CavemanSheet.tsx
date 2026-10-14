@@ -106,7 +106,7 @@ export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetM
           {PRESETS.map((p) => {
             const on = same(design, p.design);
             return (
-              <button key={p.id} type="button" aria-pressed={on} onClick={() => { setDesign({ ...p.design, name: design.name }); setWaveFrom(frame); }} className={`lift flex flex-col items-center gap-1.5 rounded-[18px] border-2 p-2 ${on ? 'border-ochre bg-sand shadow-[0_0_30px_-6px_rgb(255_120_80/0.6)]' : 'border-hairline bg-bone'}`}>
+              <button key={p.id} type="button" aria-pressed={on} onClick={() => { setDesign({ ...p.design, name: design.name }); setWaveFrom(frame); }} className={`lift flex flex-col items-center gap-1.5 rounded-[18px] border-2 p-2 ${on ? 'border-black bg-sand -rotate-2' : 'border-hairline bg-bone'}`}>
                 <svg viewBox="0 0 200 320" className="rig-stage h-28 w-full rounded-[12px]" aria-hidden="true">
                   <CavemanRig design={p.design} motion={on ? 'wave' : 'idle'} expression="happy" frame={frame} talking={false} blinkSeed={p.id.length} />
                 </svg>
@@ -121,7 +121,7 @@ export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetM
         </button>
         {open && (
           <div className="mt-3 grid gap-5 sm:grid-cols-[180px_1fr]">
-            <div className="rig-stage flex items-start justify-center rounded-[18px] p-2 shadow-[0_20px_50px_-20px_rgb(255_120_80/0.6)] sm:sticky sm:top-0">
+            <div className="rig-stage flex items-start justify-center rounded-[18px] p-2 sm:sticky sm:top-0">
               <svg viewBox="0 0 200 320" className="h-56 w-36" aria-label="Preview" role="img" data-testid="caveman-preview">
                 <CavemanRig design={design} motion={waving ? 'wave' : 'idle'} expression="happy" frame={frame} talking={false} />
               </svg>

@@ -69,7 +69,7 @@ export function MakingScreen() {
     <main className="mx-auto flex w-full max-w-[720px] flex-col items-center px-4 pt-14 text-center">
       <h1 className="font-display text-3xl font-bold">{en.making.title}</h1>
       {/* A lit stage in the dark cave: the caveman rolls his stone wheel across while the steps tick off. */}
-      <div className="relative mt-8 w-full max-w-md overflow-hidden rounded-[26px] bg-[linear-gradient(180deg,#fff6e6,#ffd9b0)] p-3 shadow-[0_0_0_1px_rgb(255_255_255/0.4),0_30px_80px_-20px_rgb(255_120_80/0.6)]" aria-hidden="true">
+      <div className="relative mt-8 w-full max-w-md overflow-hidden rounded-[28px] border-[1.5px] border-black bg-sun p-3" aria-hidden="true">
         <svg viewBox="0 0 400 160" className="h-40 w-full">
           <line x1="0" y1="150" x2="400" y2="150" stroke="#1F1A17" strokeWidth="4" strokeLinecap="round" />
           <g transform={`translate(${40 + (Math.min(step, 3) / 3) * 220}, 0)`}>
@@ -82,8 +82,8 @@ export function MakingScreen() {
             </g>
           </g>
         </svg>
-        <div className="mx-1 mb-1 mt-1 h-2 overflow-hidden rounded-full bg-[rgb(31_26_23/0.12)]">
-          <div className="h-full rounded-full bg-[linear-gradient(90deg,#ffc15e,#ff4f8b,#c94dff)] transition-[width] duration-300" style={{ width: `${(Math.min(step, 3) / 3) * 100}%` }} />
+        <div className="mx-1 mb-1 mt-1 h-2 overflow-hidden rounded-full border-[1.5px] border-black bg-white">
+          <div className="h-full rounded-full bg-black transition-[width] duration-300" style={{ width: `${(Math.min(step, 3) / 3) * 100}%` }} />
         </div>
       </div>
       {error ? (

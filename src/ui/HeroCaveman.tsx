@@ -1,19 +1,22 @@
-// The Start screen's hero: your caveman, live, inside a glowing orb, with lesson drawings drifting around
-// him. He follows the pointer a little and runs through a few of his 16 actions on his own.
+// The Start screen's poster: a huge HEYCAVEMAN wordmark that the blue ribbon loops behind, lesson drawings
+// stuck around it like stickers, and your caveman standing in front, running through his actions and
+// leaning toward the pointer.
 import { useEffect, useRef, useState } from 'react';
 import { CavemanRig } from '../caveman/CavemanRig';
 import { CAVEY } from '../caveman/presets';
+import { en } from '../i18n/en';
 import { useSettings } from '../store/settings';
 import type { MotionId } from '../types';
+import { Ribbon } from './Ribbon';
 
-const SHOWREEL: MotionId[] = ['wave', 'explain', 'point', 'think', 'celebrate', 'talk'];
-const ORBIT = [
-  { file: 'assets/lightbulb.svg', x: 6, y: 16, s: 64, r: -12, d: 0 },
-  { file: 'assets/rocket.svg', x: 78, y: 6, s: 70, r: 14, d: -1.5 },
-  { file: 'assets/planet.svg', x: 84, y: 62, s: 62, r: 0, d: -3 },
-  { file: 'assets/book.svg', x: 0, y: 68, s: 58, r: 10, d: -2.2 },
-  { file: 'assets/star.svg', x: 44, y: -4, s: 40, r: 0, d: -4 },
-  { file: 'assets/heart.svg', x: 60, y: 88, s: 42, r: -8, d: -0.8 },
+const SHOWREEL: MotionId[] = ['wave', 'explain', 'point', 'celebrate', 'think', 'talk'];
+const STICKERS = [
+  { file: 'assets/rocket.svg', x: 4, y: 6, s: 15, r: -14 },
+  { file: 'assets/lightbulb.svg', x: 44, y: -2, s: 11, r: 10 },
+  { file: 'assets/planet.svg', x: 72, y: -6, s: 13, r: 0 },
+  { file: 'assets/book.svg', x: 2, y: 60, s: 12, r: 12 },
+  { file: 'assets/star.svg', x: 66, y: 74, s: 8, r: 0 },
+  { file: 'assets/heart.svg', x: 22, y: 70, s: 8, r: -10 },
 ];
 
 export function HeroCaveman() {
@@ -32,10 +35,8 @@ export function HeroCaveman() {
     };
     raf = requestAnimationFrame(tick);
     const onMove = (e: PointerEvent) => {
-      const el = box.current;
-      if (!el) return;
-      el.style.setProperty('--px', String(e.clientX / innerWidth - 0.5));
-      el.style.setProperty('--py', String(e.clientY / innerHeight - 0.5));
+      box.current?.style.setProperty('--px', String(e.clientX / innerWidth - 0.5));
+      box.current?.style.setProperty('--py', String(e.clientY / innerHeight - 0.5));
     };
     addEventListener('pointermove', onMove);
     return () => {
@@ -45,28 +46,35 @@ export function HeroCaveman() {
   }, [still]);
 
   const motion = SHOWREEL[Math.floor(frame / 110) % SHOWREEL.length];
+  const word = en.appName.toUpperCase();
   return (
-    <div ref={box} className="relative mx-auto aspect-square w-full max-w-[380px] select-none" aria-hidden="true" data-testid="hero">
-      {/* the orb: a slowly turning ring of ember light around a deep glass disc */}
-      <div className="absolute inset-[8%] animate-[spin_18s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,#ffc15e,#ff4f8b,#c94dff,#3df5ff,#ffc15e)] opacity-90 blur-[2px]" />
-      <div className="absolute inset-[8%] animate-[spin_18s_linear_infinite] rounded-full bg-[conic-gradient(from_0deg,#ffc15e,#ff4f8b,#c94dff,#3df5ff,#ffc15e)] opacity-60 blur-2xl" />
-      <div className="rig-stage absolute inset-[9.5%] rounded-full shadow-[inset_0_-30px_60px_rgb(255_90_120/0.35),inset_0_10px_40px_rgb(255_255_255/0.6)]" />
-      <div className="absolute inset-[9.5%] overflow-hidden rounded-full">
-        <div className="absolute inset-x-0 bottom-0 h-[30%] bg-[linear-gradient(180deg,transparent,rgb(255_120_90/0.35))]" />
-        <div className="absolute inset-x-[18%] bottom-[22%] h-3 rounded-[50%] bg-[rgb(31_26_23/0.18)] blur-[3px]" />
-      </div>
-      <svg viewBox="0 0 200 320" className="absolute left-1/2 top-[16%] h-[66%] transition-transform duration-300 ease-out" style={{ transform: 'translate(calc(-50% + var(--px, 0) * 14px), calc(var(--py, 0) * 10px))' }}>
+    <div ref={box} className="relative isolate select-none" data-testid="hero">
+      <Ribbon className="absolute left-1/2 top-1/2 -z-10 h-[260%] w-[100vw] -translate-x-1/2 -translate-y-[46%]" />
+      <p className="poster letters relative text-center text-[19vw] text-black sm:text-[15vw] xl:text-[200px]" aria-label={en.appName}>
+        {[...word].map((ch, i) => (
+          <span key={i} aria-hidden="true" style={{ animationDelay: `${120 + i * 55}ms` }}>
+            {ch}
+          </span>
+        ))}
+      </p>
+      {STICKERS.map((s, i) => (
+        <span
+          key={s.file}
+          aria-hidden="true"
+          className="pop-in absolute"
+          style={{ left: `${s.x}%`, top: `${s.y}%`, width: `${s.s}%`, maxWidth: s.s * 9, animationDelay: `${700 + i * 90}ms`, translate: `calc(var(--px, 0) * ${(i % 3) * 14 + 10}px) calc(var(--py, 0) * ${(i % 2) * 12 + 8}px)` }}
+        >
+          <img src={`/${s.file}`} alt="" className="float wiggle pointer-events-auto block w-full" style={{ ['--r' as string]: `${s.r}deg`, animationDelay: `${-i * 0.9}s` }} />
+        </span>
+      ))}
+      <svg
+        viewBox="0 0 200 320"
+        className="pop-in pointer-events-none absolute bottom-[-62%] right-[-3%] h-[190%] transition-transform duration-300 ease-out sm:right-[1%]"
+        style={{ transform: 'translate(calc(var(--px, 0) * 18px), calc(var(--py, 0) * 8px))', animationDelay: '900ms' }}
+        aria-hidden="true"
+      >
         <CavemanRig design={design} motion={motion} expression="happy" frame={frame} talking={motion === 'talk' || motion === 'explain'} />
       </svg>
-      {ORBIT.map((o, i) => (
-        <img
-          key={o.file}
-          src={`/${o.file}`}
-          alt=""
-          className="float absolute drop-shadow-[0_10px_20px_rgb(255_120_80/0.35)]"
-          style={{ left: `${o.x}%`, top: `${o.y}%`, width: o.s, ['--r' as string]: `${o.r}deg`, animationDelay: `${o.d}s`, translate: `calc(var(--px, 0) * ${(i % 3) * 10 + 8}px) calc(var(--py, 0) * ${(i % 2) * 10 + 8}px)` }}
-        />
-      ))}
     </div>
   );
 }

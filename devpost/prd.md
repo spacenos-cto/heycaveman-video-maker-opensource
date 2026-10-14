@@ -63,7 +63,15 @@ One-column web app, centred, max ~720 px wide on the Start screen. The surfaces,
 The header is on every screen: the logo, an offline status dot or pill, **My videos**, **Install app** (when available), and the ⋯ menu.
 
 ## Look and Feel
-Source: `scope.md > Inspiration & Identity`. Learner's v2 direction, kept word for word, then updated by v3 below.
+Source: `scope.md > Inspiration & Identity`. Learner's v2 direction, kept word for word, then updated by v4 and v3 below.
+
+> **v4 — Sticker Cave (learner's request, Oct 14 2026, with a Slush reference: "the UI is still very bad… I want it to look like this, with cool animations"). Supersedes v3 below.** The app is a sticker book on pastel paper:
+> - **Frame:** a black page holding one big rounded sky-wash (#DCEEFF) sheet; a lavender marquee strip scrolls across the top.
+> - **Type:** Anton (condensed poster display, uppercase, crushed leading) + Inter Tight (body, buttons in bold uppercase with open tracking). Video captions stay Baloo 2.
+> - **Controls:** pill buttons with 1.5px black outlines on white; the primary action is a black pill that flashes ember on hover; chosen things turn sunburst yellow. Cards are white with black outlines, 24px corners. No drop shadows, no gradients.
+> - **Sticker palette:** electric blue #4DA2FF, mint #55DB9C, lavender #E9CCFF, ember #FB4903, sunburst #FFD731, violet #5C4ADE, used together as flat fills.
+> - **Signature:** a grainy inflatable blue ribbon (layered SVG strokes) loops behind a giant HEYCAVEMAN wordmark, with the bundled CC0 drawings stuck around it as stickers and the caveman standing in front.
+> - **Motion:** wordmark letters jump in one by one, the ribbon draws itself, stickers pop in, bob and wiggle when touched, buttons tilt on hover, screens rise in; the hero caveman acts and leans toward the pointer. Reduced motion stops it all. UI sounds as in v3.
 
 > **v3 — Neon Stone Age (learner's request, Oct 14 2026: "futuristic… the jury should say wow"; the v2 look and fonts read as generic).** This replaces v2's *app* look; everything **inside the video** (moods, caption font, caveman) is unchanged.
 > - **Canvas:** a night cave: deep #07070D with slow-moving aurora light (violet, magenta, cyan, a little ember), faint stars and film grain. A Daylight variant exists for Settings › Appearance.

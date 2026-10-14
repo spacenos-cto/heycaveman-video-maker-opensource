@@ -78,30 +78,25 @@ export function StartScreen() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-[1080px] px-4 pb-20 pt-8 sm:pt-12">
+    <main className="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-2">
       {recent && (
-        <button type="button" onClick={() => void openProject(recent.id)} className="mb-5 inline-flex max-w-full items-center gap-2 truncate rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold" data-testid="continue-chip">
+        <button type="button" onClick={() => void openProject(recent.id)} className="lift relative z-10 mb-3 inline-flex max-w-full items-center gap-2 truncate rounded-full border-[1.5px] border-black bg-mint px-4 py-2 text-sm font-extrabold uppercase tracking-[0.03em]" data-testid="continue-chip">
           ▶ {en.continueChip(recent.title)}
         </button>
       )}
-      <section className="grid items-center gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <div className="stagger">
-          <p className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bone px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-terracotta">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" /> {en.eyebrow}
-          </p>
-          <h1 className="mt-4 font-display text-[34px] font-bold leading-[1.05] sm:text-[56px]">
+      <section className="relative pt-2 sm:pt-6">
+        <HeroCaveman />
+        <div className="stagger relative mt-[14%] text-center sm:mt-[9%]">
+          <h1 className="mx-auto max-w-[16ch] text-[34px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[60px]">
             {en.headline.before}
-            <span className="ember-text">{en.headline.word}</span>
+            <span className="inline-block -rotate-2 rounded-[14px] border-[1.5px] border-black bg-ember px-3 text-black">{en.headline.word}</span>
             {en.headline.after}
           </h1>
-          <p className="mt-4 max-w-[46ch] text-lg text-ash">{en.subline}</p>
-        </div>
-        <div className="pop-in order-first mx-auto w-full max-w-[240px] sm:order-none sm:max-w-none">
-          <HeroCaveman />
+          <p className="mx-auto mt-4 max-w-[46ch] text-lg text-ash sm:text-xl">{en.subline}</p>
         </div>
       </section>
 
-      <div className="panel stagger mt-8 p-4 sm:p-7">
+      <div className="panel stagger relative mx-auto mt-10 max-w-[900px] p-4 sm:p-7">
 
       <div role="tablist" aria-label="How to start">
         <span role="tab" aria-selected="true" className="inline-block rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold">
@@ -119,7 +114,7 @@ export function StartScreen() {
         onChange={(e) => onChange(e.target.value)}
         placeholder={en.placeholder}
         rows={9}
-        className="mt-3 w-full resize-y rounded-[18px] border border-hairline bg-[rgb(0_0_0/0.25)] p-5 text-[17px] leading-relaxed placeholder:text-ash/70 transition-shadow focus:outline-none focus:shadow-[0_0_0_2px_rgb(255_159_67/0.6),0_0_40px_-6px_rgb(255_95_140/0.5)] [[data-theme=light]_&]:bg-white/70"
+        className="mt-3 w-full resize-y rounded-[20px] border-[1.5px] border-black bg-white p-5 text-[17px] leading-relaxed placeholder:text-ash/80 transition-colors focus:bg-[#fffbe0] focus:outline-none"
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
         <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-ochre' : 'text-ash'}>

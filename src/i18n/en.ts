@@ -273,6 +273,7 @@ export const en = {
     squareHint: 'Posts',
   },
   mood: { label: 'Colour mood', bright: 'Bright', earthy: 'Earthy', soft: 'Soft' },
+  marquee: ['Lesson in, cartoon out', 'Free forever', 'Works offline', 'No sign-up', 'Nothing leaves your device', 'Open source', 'Made for teachers, parents and YouTubers'],
   uiSoundsOn: 'Turn app sounds on',
   uiSoundsOff: 'Turn app sounds off',
   continueChip: (t: string) => `Continue: "${t}"`,

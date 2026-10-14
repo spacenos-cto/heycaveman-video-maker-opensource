@@ -165,7 +165,7 @@ export function PlayerScreen() {
       {/* The video sits on a charcoal "slate" frame. Click to play or pause. */}
       <div
         ref={stage}
-        className={`mx-auto mt-4 overflow-hidden rounded-[22px] bg-charcoal ring-1 ring-white/15 shadow-[0_40px_100px_-30px_rgb(124_61_255/0.55),0_0_0_6px_rgb(255_255_255/0.03)] ${editIndex !== null ? 'max-lg:sticky max-lg:top-2 max-lg:z-20' : ''}`}
+        className={`mx-auto mt-4 overflow-hidden rounded-[26px] border-[1.5px] border-black bg-charcoal ${editIndex !== null ? 'max-lg:sticky max-lg:top-2 max-lg:z-20' : ''}`}
         style={{ maxWidth: project.shape === 'wide' ? '100%' : project.shape === 'square' ? '70vh' : '40vh' }}
         data-testid="player"
         onClick={toggle}
