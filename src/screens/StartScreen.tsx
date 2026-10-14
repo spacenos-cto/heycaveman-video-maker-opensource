@@ -11,6 +11,7 @@ import { CavemanSheet } from '../caveman/CavemanSheet';
 import type { CavemanDesign, LessonFields, Shape } from '../types';
 import { ShapeIcon } from '../ui/ShapeIcon';
 import { HeroCaveman } from '../ui/HeroCaveman';
+import { PremiumNote } from '../ui/PremiumNote';
 import { buildScript, TEMPLATES } from '../director/lesson';
 import { EMPTY_LESSON, LessonBuilder, TemplateCards } from './LessonBuilder';
 import { newProject } from '../director';
@@ -163,6 +164,7 @@ export function StartScreen() {
           <div className="panel mt-3 flex flex-wrap items-center gap-3 p-4 text-sm" role="status">
             <span className="flex-1">{en.linkNote}</span>
             <Button onClick={() => onChange(draft.replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, '').trim())}>{en.linkRemove}</Button>
+                  <PremiumNote id="linkCard" className="w-full" />
           </div>
         )}
         {note && (
@@ -231,6 +233,9 @@ export function StartScreen() {
       </div>
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>
+      <div className="mx-auto mt-3 flex max-w-md justify-center">
+        <PremiumNote id="smallPrint" />
+      </div>
       {meet && <CavemanSheet mode="first" initial={projectDefaults().caveman} onDone={met_} />}
       {askRemake && project && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={() => setAskRemake(false)}>

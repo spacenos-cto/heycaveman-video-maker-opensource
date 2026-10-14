@@ -63,7 +63,11 @@ export async function decodeEvent(ctx: BaseAudioContext, ev: AudioEvent): Promis
 }
 
 /** Schedule all sounds from `fromSec` on a live AudioContext. Returns stop() for pause and seek. */
-export async function playFrom(ctx: AudioContext, project: Project, fromSec: number): Promise<() => void> {
+/**
+ * Play the video's sounds from a point. `from` may be a function: it's read after the clips have
+ * decoded, so sound joins a picture that is already moving at exactly the right spot.
+ */
+export async function playFrom(ctx: AudioContext, project: Project, from: number | (() => number)): Promise<() => void> {
   const voiceGain = ctx.createGain();
   const fxGain = ctx.createGain();
   voiceGain.gain.value = 1;
@@ -71,15 +75,19 @@ export async function playFrom(ctx: AudioContext, project: Project, fromSec: num
   voiceGain.connect(ctx.destination);
   fxGain.connect(ctx.destination);
   const sources: AudioBufferSourceNode[] = [];
-  // Decode first, then start the clock, so the first sounds aren't late.
+  // Decode (in parallel), then schedule against wherever the picture is now.
+  const early = typeof from === 'number' ? from : from();
   const decoded: { ev: AudioEvent; buffer: AudioBuffer }[] = [];
-  for (const ev of audioEvents(project)) {
+  const results = await Promise.all(audioEvents(project).filter((ev) => ev.at + 60 > early).map(async (ev) => {
     try {
-      const buffer = await decodeEvent(ctx, ev);
-      if (ev.at + buffer.duration > fromSec) decoded.push({ ev, buffer });
+      return { ev, buffer: await decodeEvent(ctx, ev) };
     } catch {
-      /* a missing clip plays as silence */
+      return null; // a missing clip plays as silence
     }
+  }));
+  const fromSec = typeof from === 'number' ? from : from();
+  for (const r of results) {
+    if (r && r.ev.at + r.buffer.duration > fromSec) decoded.push(r);
   }
   const t0 = ctx.currentTime;
   for (const { ev, buffer } of decoded) {

@@ -15,7 +15,7 @@ export default defineConfig({
     },
   },
   webServer: [
-    { command: 'npx vite --port 5175 --strictPort', url: 'http://localhost:5175', reuseExistingServer: true, timeout: 60_000 },
+    { command: 'npx vite --port 5175 --strictPort', url: 'http://localhost:5175', reuseExistingServer: true, timeout: 60_000, env: { VITE_REPO_URL: 'https://example.invalid/heycaveman' } },
     { command: 'npx vite preview --port 4175 --strictPort', url: 'http://localhost:4175', reuseExistingServer: true, timeout: 60_000 },
   ],
 });

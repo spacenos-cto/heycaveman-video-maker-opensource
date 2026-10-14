@@ -1,6 +1,6 @@
 // Watch the video (devpost/prd.md > F7). Our own player: a frame clock draws the current scene's SVG
 // about 30 times a second, sounds play through Web Audio, and the same SVG becomes the MP4 on export.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Download, Maximize, Mic, PencilRuler, Pause, Play, Save, Shuffle, Volume2 } from 'lucide-react';
 import { shuffle } from '../director/shuffle';
 import { audioContext, playFrom } from '../audio/sounds';
@@ -16,9 +16,14 @@ import { ScenePanel } from './ScenePanel';
 import { setReadingSpeed, switchMood, switchShape } from '../editor/sceneOps';
 import { useSettings } from '../store/settings';
 import { ShapeIcon } from '../ui/ShapeIcon';
+import { PremiumNote } from '../ui/PremiumNote';
+import { IMPORT_URL, LAUNCH_CODE, openHeyCaveman } from '../data/premium';
 import type { Mood, Shape } from '../types';
 import { useVoice } from '../voice/voiceStore';
 import { storage } from '../storage/db';
+
+/** Thumbnails show one still frame: redraw them only when the video itself changes, not every frame. */
+const StillScene = memo(SceneSvg);
 
 const fmt = (frames: number) => {
   const s = Math.floor(frames / FPS);
@@ -30,6 +35,7 @@ export function PlayerScreen() {
   const { project, go, saveProjectFile, undo, redo, setProject, readOnly } = useApp();
   const [editing, setEditing] = useState<number | null>(null);
   const [pausedForTalk, setPausedForTalk] = useState(false);
+  const [handoff, setHandoff] = useState(false);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -67,18 +73,21 @@ export function PlayerScreen() {
       const start = from >= tl.total - 1 ? 0 : from;
       setPlaying(true);
       setPausedForTalk(false);
-      try {
-        const ctx = audioContext();
-        await ctx.resume();
-        const stopAudio = await playFrom(ctx, project, start / FPS);
-        if (token !== c.token) return stopAudio();
-        c.stopAudio = stopAudio;
-      } catch {
-        /* audio blocked or unavailable: play silently */
-      }
-      if (token !== c.token) return;
+      // The picture starts at once; sound joins in sync as soon as its clips have decoded.
       c.startAt = performance.now();
       c.startFrame = start;
+      const position = () => (c.startFrame + ((performance.now() - c.startAt) / 1000) * FPS) / FPS;
+      void (async () => {
+        try {
+          const ctx = audioContext();
+          await ctx.resume();
+          const stopAudio = await playFrom(ctx, project, position);
+          if (token !== c.token) return stopAudio();
+          c.stopAudio = stopAudio;
+        } catch {
+          /* audio blocked or unavailable: play silently */
+        }
+      })();
       // Pause points: the classroom player stops after that scene for discussion (prd.md > F12.5).
       const stopAt = tl.starts.find((st, i) => i > 0 && tl.scenes[i - 1].pauseHere && st > start + 1);
       const tick = () => {
@@ -142,6 +151,13 @@ export function PlayerScreen() {
 
   useEffect(() => stop, [stop]);
 
+  // Stable handlers so the scene panel doesn't redraw on every video frame.
+  const selectScene = useCallback((i: number) => {
+    stop();
+    setEditing(i);
+  }, [stop]);
+  const closePanel = useCallback(() => setEditing(null), []);
+
   // While a scene is open for editing, keep the player paused on it a moment in (drawings have popped in).
   useEffect(() => {
     if (editing === null || !tl || playing || editing >= tl.starts.length) return;
@@ -159,10 +175,7 @@ export function PlayerScreen() {
     seek(Math.min(tl.starts[i] + 24, (tl.starts[i + 1] ?? tl.total) - 1));
     setEditing(i < project.scenes.length ? i : null); // the end card is set in Download video
   };
-  const selectScene = (i: number) => {
-    stop();
-    setEditing(i);
-  };
+
 
   return (
     <main className={`mx-auto w-full px-4 pb-16 pt-6 ${editIndex !== null ? 'max-w-[1440px] lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-6' : 'max-w-[1100px]'}`}>
@@ -257,6 +270,7 @@ export function PlayerScreen() {
           ))}
         </div>
       </div>
+      <PremiumNote id="moreLooks" className="mt-3" onOpen={() => { stop(); setHandoff(true); }} />
       {pausedForTalk && (
         <p className="mt-3 inline-flex items-center gap-2 rounded-full border-[1.5px] border-black bg-sun px-4 py-2 font-semibold" role="status" data-testid="paused-for-talk">
           ✋ {en.player.pausedForTalk}
@@ -285,7 +299,7 @@ export function PlayerScreen() {
               aria-expanded={i < project.scenes.length ? editIndex === i : undefined}
               className={`lift block w-44 overflow-hidden rounded-[16px] border bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'} ${editIndex === i ? 'ring-2 ring-ochre ring-offset-2' : ''}`}
             >
-              <SceneSvg project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
+              <StillScene project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
               <span className="flex items-center gap-1 truncate px-2 py-1 text-xs text-ash">
                 {scene.voice.type === 'recorded' && <Mic size={12} aria-label={en.voice.recorded} />}
                 {scene.voice.type === 'builtin' && <Volume2 size={12} aria-label={en.voice.builtinTag} />}
@@ -296,9 +310,22 @@ export function PlayerScreen() {
         ))}
       </ol>
       </div>
-      {editIndex !== null && <ScenePanel index={editIndex} onSelect={selectScene} onClose={() => setEditing(null)} />}
+      {editIndex !== null && <ScenePanel index={editIndex} onSelect={selectScene} onClose={closePanel} />}
       {exporting && <ExportPanel project={project} onClose={() => setExporting(false)} />}
       {voicePanel && <VoicePanel onClose={() => setVoicePanel(false)} />}
+      {handoff && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" onClick={() => setHandoff(false)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="handoff-title" className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && setHandoff(false)}>
+            <h2 id="handoff-title" className="font-display text-4xl">{en.info.handoffTitle}</h2>
+            <p className="mt-2">{en.info.handoffText}</p>
+            <p className="mt-3 inline-block rounded-full border-[1.5px] border-black bg-sun px-3 py-1 text-sm font-extrabold">{en.info.launchCode(LAUNCH_CODE)}</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button variant="primary" onClick={() => { saveProjectFile(project); openHeyCaveman(IMPORT_URL); setHandoff(false); }}>{en.info.handoffGo}</Button>
+              <Button variant="ghost" onClick={() => setHandoff(false)}>{en.caveman.cancel}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -6,6 +6,7 @@ import { lessonProblems, MAX_POINTS, TEMPLATES, type Template } from '../directo
 import { en } from '../i18n/en';
 import type { LessonFields } from '../types';
 import { Button } from '../ui/Button';
+import { PremiumNote } from '../ui/PremiumNote';
 
 const t = en.lesson;
 export const EMPTY_LESSON: LessonFields = { topic: '', points: ['', '', ''], titleCard: true };
@@ -134,6 +135,7 @@ export function LessonBuilder({ lesson, onChange, template, onMake, onTurnIntoTe
       </div>
       {problems.includes('points') && !problems.includes('topic') && <p className="text-sm text-ash">{t.needPoint}</p>}
       <Button variant="ghost" className="px-0" onClick={() => onChange({ ...ex, template: template?.id, titleCard: true })}>{t.fillExample}</Button>
+      <PremiumNote id="lessonFooter" />
     </div>
   );
 }

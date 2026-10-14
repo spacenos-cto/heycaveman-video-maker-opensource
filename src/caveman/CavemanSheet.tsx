@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, Lock } from 'lucide-react';
 import { en } from '../i18n/en';
-import { useSettings } from '../store/settings';
+import { usePremium } from '../data/premium';
 import type { CavemanDesign } from '../types';
 import { Button } from '../ui/Button';
 import { CavemanRig } from './CavemanRig';
@@ -71,7 +71,7 @@ export type SheetMode = 'first' | 'mine' | 'project';
  * caveman, then ask "just this video, or new videos too?" (prd.md > F4 Rule 2).
  */
 export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetMode; initial?: CavemanDesign; onDone: (design: CavemanDesign, alsoMine: boolean) => void; onCancel?: () => void }) {
-  const classroom = useSettings((s) => s.classroomMode);
+  const showLocked = usePremium('lockedStyles');
   const [design, setDesign] = useState<CavemanDesign>(initial ?? CAVEY);
   const [open, setOpen] = useState(false);
   const [askScope, setAskScope] = useState(false);
@@ -135,7 +135,7 @@ export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetM
                       {t.styles[s]}
                     </button>
                   ))}
-                  {!classroom &&
+                  {showLocked &&
                     ['Countryball', 'Blob'].map((n) => (
                       <span key={n} className="flex items-center gap-1 rounded-full border-2 border-dashed border-hairline px-3 py-0.5 text-sm text-ash" data-premium="style">
                         <Lock size={12} aria-hidden="true" /> {t.lockedStyle(n)}

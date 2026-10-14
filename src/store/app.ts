@@ -9,7 +9,7 @@ import type { LessonFields, Project } from '../types';
 import { loadUploads, uploadIds } from '../editor/uploads';
 import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './history';
 
-export type Screen = 'start' | 'making' | 'player' | 'editor' | 'videos';
+export type Screen = 'start' | 'making' | 'player' | 'editor' | 'videos' | 'settings' | 'help' | 'about';
 
 const DRAFT_KEY = 'stoneage.draft';
 const AUTOSAVE_MS = 300;

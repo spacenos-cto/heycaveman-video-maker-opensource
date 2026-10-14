@@ -5,7 +5,7 @@ import { CavemanRig } from './caveman/CavemanRig';
 import { CavemanSheet } from './caveman/CavemanSheet';
 import { CAVEY } from './caveman/presets';
 import { useSettings } from './store/settings';
-import { Download, Film, Volume2, VolumeX } from 'lucide-react';
+import { Download, Film, MoreHorizontal, Volume2, VolumeX } from 'lucide-react';
 import { ui } from './ui/uiSounds';
 import { en } from './i18n/en';
 import { installApp, useOffline } from './offline/status';
@@ -14,6 +14,7 @@ import { PlayerScreen } from './screens/PlayerScreen';
 import { EditorScreen } from './editor/EditorScreen';
 import { StartScreen } from './screens/StartScreen';
 import { VideosPage } from './screens/VideosPage';
+import { AboutPage, HelpPage, SettingsPage } from './screens/InfoPages';
 import { purgeOldDeleted } from './storage/db';
 import { useApp } from './store/app';
 import { Logo } from './ui/Logo';
@@ -28,9 +29,16 @@ export function App() {
   const uiSounds = useSettings((s) => s.uiSounds);
   const theme = useSettings((s) => s.theme);
 
-  // Appearance (Settings): the paper look is the one design for now.
+  // Appearance (Settings): Paper (default), Night, or follow the device.
   useEffect(() => {
-    document.documentElement.dataset.theme = 'light';
+    const apply = () => {
+      const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    };
+    apply();
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
   }, [theme]);
 
   // A soft tick for every press, a whoosh between screens.
@@ -43,6 +51,7 @@ export function App() {
   }, []);
   useEffect(() => ui.whoosh(), [screen]);
   const [editMine, setEditMine] = useState(false);
+  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     void useSettings.getState().load();
@@ -83,6 +92,20 @@ export function App() {
                 <Download size={16} aria-hidden="true" /> {en.offline.install}
               </button>
             )}
+            <div className="relative">
+              <button type="button" onClick={() => setMenu((m) => !m)} className={`${pill} w-11 px-0`} aria-label={en.info.more} aria-expanded={menu} aria-haspopup="menu">
+                <MoreHorizontal size={18} aria-hidden="true" />
+              </button>
+              {menu && (
+                <div role="menu" className="pop-in absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-[20px] border-[1.5px] border-black bg-white" onKeyDown={(e) => e.key === 'Escape' && setMenu(false)}>
+                  {(['settings', 'help', 'about'] as const).map((k) => (
+                    <button key={k} type="button" role="menuitem" onClick={() => { setMenu(false); go(k); }} className="block w-full border-b border-black/10 px-4 py-2.5 text-left text-sm font-extrabold uppercase tracking-[0.03em] last:border-0 hover:bg-sun">
+                      {en.info[k]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button type="button" onClick={() => go('videos')} className="flex h-11 items-center gap-1.5 rounded-full bg-black px-4 text-[13px] font-extrabold uppercase tracking-[0.035em] text-white transition-transform duration-200 hover:-rotate-2 hover:bg-ember hover:text-black" aria-current={screen === 'videos' ? 'page' : undefined} aria-label={en.videos.nav}>
               <Film size={17} aria-hidden="true" /> <span className="hidden sm:inline">{en.videos.nav}</span>
             </button>
@@ -108,6 +131,9 @@ export function App() {
         {screen === 'player' && <PlayerScreen />}
         {screen === 'editor' && <EditorScreen />}
         {screen === 'videos' && <VideosPage />}
+        {screen === 'settings' && <SettingsPage onEditCaveman={() => setEditMine(true)} />}
+        {screen === 'help' && <HelpPage />}
+        {screen === 'about' && <AboutPage />}
       </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { useApp } from '../store/app';
 import type { Project } from '../types';
 import { Button } from '../ui/Button';
 import { useVoice } from '../voice/voiceStore';
+import { useSettings } from '../store/settings';
 import { staleScenes } from '../voice/voicing';
 import { ui } from '../ui/uiSounds';
 
@@ -22,6 +23,7 @@ const fmtMs = (ms: number) => {
 
 export function ExportPanel({ project, onClose }: { project: Project; onClose: () => void }) {
   const setProject = useApp((s) => s.setProject);
+  const classroom = useSettings((s) => s.classroomMode);
   const [quality, setQuality] = useState<Quality>('720p');
   const [phase, setPhase] = useState<Phase>('choose');
   const [progress, setProgress] = useState<ExportProgress | null>(null);
@@ -29,6 +31,12 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
   const [frame, setFrame] = useState(0);
   const abort = useRef<AbortController | null>(null);
   const dialog = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const want = useSettings.getState().defaults.endCard;
+    if (classroom && project.endCard !== want) setProject({ ...project, endCard: want, updatedAt: Date.now() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classroom]);
 
   useEffect(() => {
     dialog.current?.focus();
@@ -118,6 +126,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
               <input
                 type="checkbox"
                 checked={project.endCard}
+                disabled={classroom}
                 onChange={(e) => setProject({ ...project, endCard: e.target.checked, updatedAt: Date.now() })}
                 className="mt-1 h-5 w-5 accent-[#E8892B]"
               />

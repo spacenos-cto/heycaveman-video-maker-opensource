@@ -205,6 +205,7 @@ h1.font-display {
 }
 /* Stickers bob gently and wiggle when touched. */
 .float {
+  will-change: transform;
   animation: bob 5s ease-in-out infinite;
 }
 @keyframes bob {
@@ -271,3 +272,32 @@ input[type='range'] {
   from { transform: translate(0, 0) rotate(0deg); }
   to { transform: translate(-2%, 2%) rotate(-2deg); }
 }
+
+/* ---------- Night: the same sticker book on dark paper (Settings › Appearance) ---------- */
+[data-theme='dark'] {
+  --color-cave-paper: #17151f;
+  --color-bone: #23202f;
+  --color-charcoal: #f4f1ff;
+  --color-ash: #b9b4cc;
+  --color-ochre: #ffffff;
+  --color-terracotta: #c9bcff;
+  --color-moss: #55db9c;
+  --color-berry: #ff7a4d;
+  --color-hairline: rgb(255 255 255 / 0.16);
+  color-scheme: dark;
+}
+[data-theme='dark'] .bg-white,
+[data-theme='dark'] .panel,
+[data-theme='dark'] .sticker { background-color: #23202f; }
+[data-theme='dark'] .border-black,
+[data-theme='dark'] .panel,
+[data-theme='dark'] .sticker { border-color: rgb(255 255 255 / 0.82); }
+[data-theme='dark'] .text-black { color: #f4f1ff; }
+[data-theme='dark'] .bg-black { background-color: #f4f1ff; color: #000; }
+[data-theme='dark'] .sticker.bg-ochre { background-color: #f4f1ff; color: #000 !important; }
+/* Pastel stickers keep dark ink so they stay readable at night. */
+[data-theme='dark'] :is(.bg-sun, .bg-sand, .bg-mint, .bg-lavender, .bg-ember, .bg-blue, .marquee, .rig-stage, [class*='bg-[#']) { color: #000; }
+[data-theme='dark'] :is(.bg-sun, .bg-sand, .bg-mint, .bg-lavender, .bg-ember) :is(.text-ash, .text-black) { color: #000; }
+[data-theme='dark'] .sticker:hover:not(:disabled) { color: #000; }
+[data-theme='dark'] :is(input, textarea, select):focus { background-color: #2c2840; }
+[data-theme='dark'] .poster { color: #f4f1ff; }

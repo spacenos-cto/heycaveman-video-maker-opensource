@@ -1,7 +1,7 @@
 // Tap a scene to change it (devpost/prd.md > F8): one scene's words, caption, caveman, background,
 // drawings and sound, plus duplicate / delete / move / add. Every change shows in the player at once
 // and can be undone (Ctrl+Z / Ctrl+Y or the buttons).
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, Copy, Plus, Redo2, Search, Trash2, Undo2, Volume2, X } from 'lucide-react';
 import { audioContext, playSfx } from '../audio/sounds';
 import { CavemanRig } from '../caveman/CavemanRig';
@@ -99,7 +99,7 @@ function PropSearch({ onAdd, full }: { onAdd: (id: string) => void; full: boolea
 }
 
 /** `onClose` absent = shown inside the Editor, which has its own heading and undo buttons. */
-export function ScenePanel({ index, onSelect, onClose }: { index: number; onSelect: (i: number) => void; onClose?: () => void }) {
+export const ScenePanel = memo(function ScenePanel({ index, onSelect, onClose }: { index: number; onSelect: (i: number) => void; onClose?: () => void }) {
   const { project, setProject, undo, redo, history, readOnly } = useApp();
   const [adding, setAdding] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -347,4 +347,4 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
       </div>
     </aside>
   );
-}
+});

@@ -9,6 +9,7 @@ import type { ManifestAsset } from '../types';
 import { addProp, editScene, MAX_PROPS } from './sceneOps';
 import { blobIdOf, keepPicture, PictureError, preparePicture, uploadIds, uploadRef, useUploads } from './uploads';
 import { ui } from '../ui/uiSounds';
+import { PremiumNote } from '../ui/PremiumNote';
 
 const t = en.editor;
 const label = (a: ManifestAsset) => a.names[0].replace('*', '');
@@ -123,6 +124,7 @@ export function Library({ sceneIndex, onAdded }: { sceneIndex: number; onAdded: 
       ) : (
         <p className="text-sm text-ash">{en.scenePanel.noMatch}</p>
       )}
+      <PremiumNote id="propLibrary" />
     </div>
   );
 }
