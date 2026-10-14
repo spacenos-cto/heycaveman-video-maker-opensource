@@ -10,7 +10,11 @@ export const SIZES: Record<Shape, { width: number; height: number }> = {
   square: { width: 1080, height: 1080 },
 };
 
-export const sceneFrames = (scene: Scene) => Math.max(1, Math.round((scene.durationMs / 1000) * FPS));
+/** A pause point holds the scene 3 s longer in the exported file; the in-app player stops there instead (prd.md > F12.5). */
+export const PAUSE_HOLD_MS = 3000;
+
+export const sceneFrames = (scene: Scene, exporting = false) =>
+  Math.max(1, Math.round(((scene.durationMs + (exporting && scene.pauseHere ? PAUSE_HOLD_MS : 0)) / 1000) * FPS));
 
 /** The end card: last 3 s, "Made with HeyCaveman" (devpost/prd.md > F13). */
 export function endCardScene(): Scene {
@@ -35,13 +39,13 @@ export function playedScenes(project: Project): Scene[] {
 
 export type Timeline = { scenes: Scene[]; starts: number[]; total: number };
 
-export function timeline(project: Project): Timeline {
+export function timeline(project: Project, { exporting = false } = {}): Timeline {
   const scenes = playedScenes(project);
   const starts: number[] = [];
   let t = 0;
   for (const s of scenes) {
     starts.push(t);
-    t += sceneFrames(s);
+    t += sceneFrames(s, exporting);
   }
   return { scenes, starts, total: Math.max(1, t) };
 }

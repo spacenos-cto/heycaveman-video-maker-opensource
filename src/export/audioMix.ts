@@ -12,7 +12,7 @@ export async function mixAudio(project: Project, durationSec: number): Promise<A
   fxGain.gain.value = effectsGain(project);
   voiceGain.connect(ctx.destination);
   fxGain.connect(ctx.destination);
-  for (const ev of audioEvents(project)) {
+  for (const ev of audioEvents(project, true)) {
     if (ev.at >= durationSec) continue;
     try {
       const src = ctx.createBufferSource();

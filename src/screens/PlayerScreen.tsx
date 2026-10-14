@@ -1,7 +1,8 @@
 // Watch the video (devpost/prd.md > F7). Our own player: a frame clock draws the current scene's SVG
 // about 30 times a second, sounds play through Web Audio, and the same SVG becomes the MP4 on export.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Download, Maximize, Mic, PencilRuler, Pause, Play, Save, Volume2 } from 'lucide-react';
+import { ArrowLeft, Download, Maximize, Mic, PencilRuler, Pause, Play, Save, Shuffle, Volume2 } from 'lucide-react';
+import { shuffle } from '../director/shuffle';
 import { audioContext, playFrom } from '../audio/sounds';
 import { en } from '../i18n/en';
 import { useApp } from '../store/app';
@@ -12,7 +13,7 @@ import { FPS, locate, sceneFrames, timeline } from '../video/timeline';
 import { ExportPanel } from './ExportPanel';
 import { DownloadVoices, VoicePanel } from './VoicePanel';
 import { ScenePanel } from './ScenePanel';
-import { switchMood, switchShape } from '../editor/sceneOps';
+import { setReadingSpeed, switchMood, switchShape } from '../editor/sceneOps';
 import { useSettings } from '../store/settings';
 import { ShapeIcon } from '../ui/ShapeIcon';
 import type { Mood, Shape } from '../types';
@@ -28,6 +29,7 @@ const fmt = (frames: number) => {
 export function PlayerScreen() {
   const { project, go, saveProjectFile, undo, redo, setProject, readOnly } = useApp();
   const [editing, setEditing] = useState<number | null>(null);
+  const [pausedForTalk, setPausedForTalk] = useState(false);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -64,6 +66,7 @@ export function PlayerScreen() {
       const token = ++c.token;
       const start = from >= tl.total - 1 ? 0 : from;
       setPlaying(true);
+      setPausedForTalk(false);
       try {
         const ctx = audioContext();
         await ctx.resume();
@@ -76,8 +79,16 @@ export function PlayerScreen() {
       if (token !== c.token) return;
       c.startAt = performance.now();
       c.startFrame = start;
+      // Pause points: the classroom player stops after that scene for discussion (prd.md > F12.5).
+      const stopAt = tl.starts.find((st, i) => i > 0 && tl.scenes[i - 1].pauseHere && st > start + 1);
       const tick = () => {
         const f = c.startFrame + ((performance.now() - c.startAt) / 1000) * FPS;
+        if (stopAt !== undefined && f >= stopAt - 1) {
+          setFrame(stopAt - 1);
+          stop();
+          setPausedForTalk(true);
+          return;
+        }
         if (f >= tl.total - 1) {
           setFrame(tl.total - 1);
           stop();
@@ -233,6 +244,24 @@ export function PlayerScreen() {
           ))}
         </div>
       </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <Button className="px-4 py-2" disabled={readOnly} onClick={() => { stop(); setProject(shuffle(project)); }} title={en.player.shuffleHint}>
+          <Shuffle size={16} aria-hidden="true" /> {en.player.shuffle}
+        </Button>
+        <div className="flex items-center gap-1.5" role="group" aria-label={en.player.readingSpeed}>
+          <span className="mr-1 text-sm font-semibold">{en.player.readingSpeed}</span>
+          {(['slow', 'normal', 'fast'] as const).map((sp) => (
+            <button key={sp} type="button" disabled={readOnly} aria-pressed={project.readingSpeed === sp} onClick={() => { stop(); setProject(setReadingSpeed(project, sp)); useSettings.getState().setDefaults({ readingSpeed: sp }); }} className={`rounded-full border-[1.5px] px-3 py-0.5 text-sm ${project.readingSpeed === sp ? 'border-black bg-sand' : 'border-hairline bg-bone'}`}>
+              {en.voice.speeds[sp]}
+            </button>
+          ))}
+        </div>
+      </div>
+      {pausedForTalk && (
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full border-[1.5px] border-black bg-sun px-4 py-2 font-semibold" role="status" data-testid="paused-for-talk">
+          ✋ {en.player.pausedForTalk}
+        </p>
+      )}
       {project.caveman.style !== 'classic' && project.caveman.style !== 'cartoon' && <p className="mt-2 text-sm text-ash">{en.caveman.premiumNote}</p>}
 
       {project.voiceMode === 'none' && !cardDismissed && voice.status !== 'ready' && voice.status !== 'unsupported' && (

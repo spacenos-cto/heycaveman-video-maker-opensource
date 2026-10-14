@@ -133,7 +133,7 @@ Build mode: fast
   Learner check: Clear the site data, press Make, and design your own caveman. Is he identical in every scene? Switch to Tall and Earthy: does it still look right?
   Commit: `Add caveman designer, video shapes and colour moods`
 
-- [ ] **8. Teacher tools: Lesson Builder, templates and lesson scenes**
+- [x] **8. Teacher tools: Lesson Builder, templates and lesson scenes**
   Becomes usable:
     - The Start from a topic Lesson Builder, with Turn into text.
     - The 6 templates, with grey examples.
@@ -205,3 +205,4 @@ Activity mode:
 - Slice 7: the shape check runs on the real renderer in the player (the export draws the very same SVG), across Tall/Earthy, Square/Soft and Wide/Bright. Caption text passes 7:1 in every mood; the Soft key-word colour is 4.5:1 (large bold text), not 7:1. Premium caveman styles show as Cartoon with a note. Tests start with "Meet your caveman" already seen, except the slice 7 tests.
 - Design revision (learner request after slice 7: the look, colours and fonts felt like "AI slop"; wanted futuristic, wow, animations, sound effects, intuitive). Restyled the whole app as "Neon Stone Age" (prd.md > Look and Feel v3): night-cave aurora canvas, glass panels, ember-gradient actions, Unbounded + Manrope fonts (Fredoka and Atkinson removed), screen and list motion, a live hero caveman, and synthesized UI sounds with a mute switch. The video's own look is unchanged. All tests still pass.
 - Design revision 2: the learner still disliked v3 and sent the Slush site as the reference. Rebuilt as "Sticker Cave" (prd.md > Look and Feel v4): pastel paper sheet in a black frame, marquee, Anton + Inter Tight, black-outlined pills and cards, flat sticker colours, a grainy inflatable blue ribbon behind a giant HEYCAVEMAN wordmark with our CC0 drawings as stickers. No gradients or shadows. Unbounded and Manrope removed. All tests still pass.
+- Slice 8: two grey examples changed so the bundled drawings can show them (Word of the day: "Delicious" instead of "Enormous"; Myth vs fact: reading in dim light instead of goldfish memory). With no matching drawing, a lesson scene keeps the lesson's main drawing on screen. Measured: 23 of 29 spoken scenes (79%) match across the 6 examples, and every example runs 30–90 s. The F3.2 premium footer line moves to slice 9 with the other premium mentions.

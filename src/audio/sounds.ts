@@ -1,5 +1,6 @@
 // Everything the video sounds like: voices (built-in or recorded) and gentle sound effects. The player
 // plays these through Web Audio; the exporter mixes the very same list offline into the MP4.
+import { quizRevealMs } from '../director/lesson';
 import { sfxGain, sfxOffset } from '../director/sfx';
 import { storage } from '../storage/db';
 import type { Project } from '../types';
@@ -38,13 +39,15 @@ function rawVoice(blobId: string): Promise<ArrayBuffer> {
 export type AudioEvent = { at: number; kind: 'sfx' | 'voice'; ref: string };
 
 /** Every sound in the video and when it starts (seconds from the start of the video). */
-export function audioEvents(project: Project): AudioEvent[] {
-  const tl = timeline(project);
+export function audioEvents(project: Project, exporting = false): AudioEvent[] {
+  const tl = timeline(project, { exporting });
   const events: AudioEvent[] = [];
   tl.scenes.forEach((s, i) => {
     const start = tl.starts[i] / FPS;
     if (s.voice.blobId && s.voice.type !== 'none') events.push({ at: start, kind: 'voice', ref: s.voice.blobId });
     if (s.sfx && project.sfxLevel !== 'off') events.push({ at: start + sfxOffset(s.sfx), kind: 'sfx', ref: s.sfx });
+    // A quiz rings a ding as the answer is revealed (prd.md > F12.2).
+    if (s.kind === 'quiz' && s.quiz && project.sfxLevel !== 'off') events.push({ at: start + quizRevealMs(s) / 1000, kind: 'sfx', ref: 'ding' });
   });
   return events;
 }

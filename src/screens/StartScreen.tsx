@@ -8,14 +8,17 @@ import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import { projectDefaults, useSettings } from '../store/settings';
 import { CavemanSheet } from '../caveman/CavemanSheet';
-import type { CavemanDesign, Shape } from '../types';
+import type { CavemanDesign, LessonFields, Shape } from '../types';
 import { ShapeIcon } from '../ui/ShapeIcon';
 import { HeroCaveman } from '../ui/HeroCaveman';
+import { buildScript, TEMPLATES } from '../director/lesson';
+import { EMPTY_LESSON, LessonBuilder, TemplateCards } from './LessonBuilder';
 import { newProject } from '../director';
 import { blankProject } from '../editor/sceneOps';
 import { Button } from '../ui/Button';
 
 const WARN_WORDS = 1500;
+const LESSON_KEY = 'stoneage.lesson';
 const MAX_WORDS = 3000;
 
 export function StartScreen() {
@@ -28,6 +31,23 @@ export function StartScreen() {
   const [askRemake, setAskRemake] = useState(false);
   const { met, markMet, update, defaults, setDefaults } = useSettings();
   const [meet, setMeet] = useState(false);
+  const [tab, setTab] = useState<'write' | 'topic' | 'template'>('write');
+  const [lesson, setLessonState] = useState<LessonFields>(() => {
+    try {
+      return { ...EMPTY_LESSON, ...JSON.parse(localStorage.getItem(LESSON_KEY) ?? '{}') };
+    } catch {
+      return EMPTY_LESSON;
+    }
+  });
+  const setLesson = (l: LessonFields) => {
+    setLessonState(l);
+    try {
+      localStorage.setItem(LESSON_KEY, JSON.stringify(l));
+    } catch {
+      /* storage blocked: this session only */
+    }
+  };
+  const template = TEMPLATES.find((tpl) => tpl.id === lesson.template);
   const recent = projects.find((p) => !p.deletedAt);
   const [note, setNote] = useState<string | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -49,12 +69,15 @@ export function StartScreen() {
     setDraft(text);
   };
 
-  const onMake = () => {
-    if (isTopicOnly(draft)) {
-      // Stone Age's Lesson Builder arrives in a later slice; until then, ask for sentences.
+  const onMake = (fromLesson = false) => {
+    if (!fromLesson && isTopicOnly(draft)) {
+      // A lone topic opens the Lesson Builder with it filled in (devpost/prd.md > F2 Edge case 1).
+      setLesson({ ...lesson, topic: draft.trim() });
+      setTab('topic');
       setNote(en.topicNote);
       return;
     }
+    useApp.setState({ pendingLesson: fromLesson ? lesson : null });
     // Back from a video with hand edits: ask before replacing them (devpost/prd.md > F6 Edge case 3).
     if (project?.edited && !project.deletedAt) {
       setAskRemake(true);
@@ -98,45 +121,86 @@ export function StartScreen() {
 
       <div className="panel stagger relative mx-auto mt-10 max-w-[900px] p-4 sm:p-7">
 
-      <div role="tablist" aria-label="How to start">
-        <span role="tab" aria-selected="true" className="inline-block rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold">
-          ✏️ {en.tabs.write}
-        </span>
+      <div role="tablist" aria-label="How to start" className="flex flex-wrap gap-2">
+        {(['write', 'topic', 'template'] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={`rounded-full border-[1.5px] border-black px-4 py-1.5 text-sm font-extrabold uppercase tracking-[0.03em] transition-transform hover:-rotate-2 ${tab === k ? 'bg-sun' : 'bg-white'}`}
+          >
+            {{ write: '✏️', topic: '💡', template: '📋' }[k]} {en.tabs[k]}
+          </button>
+        ))}
       </div>
 
-      <label htmlFor="lesson" className="sr-only">
-        Your lesson
-      </label>
-      <textarea
-        id="lesson"
-        ref={box}
-        value={draft}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={en.placeholder}
-        rows={9}
-        className="mt-3 w-full resize-y rounded-[20px] border-[1.5px] border-black bg-white p-5 text-[17px] leading-relaxed placeholder:text-ash/80 transition-colors focus:bg-[#fffbe0] focus:outline-none"
-      />
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-ochre' : 'text-ash'}>
-          {en.counter(words, seconds)}
-        </span>
-        <Button variant="ghost" className="px-0 py-0" onClick={() => onChange(EXAMPLE_LESSON)}>
-          {en.tryExample}
-        </Button>
-      </div>
-      {words > WARN_WORDS && <p className="mt-2 text-sm text-ochre">{en.tooLong}</p>}
-      {hasLink && (
-        <div className="panel mt-3 flex flex-wrap items-center gap-3 p-4 text-sm" role="status">
-          <span className="flex-1">{en.linkNote}</span>
-          <Button onClick={() => onChange(draft.replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, '').trim())}>{en.linkRemove}</Button>
+      {tab === 'write' && (
+        <div>
+        <label htmlFor="lesson" className="sr-only">
+          Your lesson
+        </label>
+        <textarea
+          id="lesson"
+          ref={box}
+          value={draft}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={en.placeholder}
+          rows={9}
+          className="mt-3 w-full resize-y rounded-[20px] border-[1.5px] border-black bg-white p-5 text-[17px] leading-relaxed placeholder:text-ash/80 transition-colors focus:bg-[#fffbe0] focus:outline-none"
+        />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-ochre' : 'text-ash'}>
+            {en.counter(words, seconds)}
+          </span>
+          <Button variant="ghost" className="px-0 py-0" onClick={() => onChange(EXAMPLE_LESSON)}>
+            {en.tryExample}
+          </Button>
+        </div>
+        {words > WARN_WORDS && <p className="mt-2 text-sm text-ochre">{en.tooLong}</p>}
+        {hasLink && (
+          <div className="panel mt-3 flex flex-wrap items-center gap-3 p-4 text-sm" role="status">
+            <span className="flex-1">{en.linkNote}</span>
+            <Button onClick={() => onChange(draft.replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, '').trim())}>{en.linkRemove}</Button>
+          </div>
+        )}
+        {note && (
+          <p className="mt-3 rounded-[12px] border border-river bg-bone p-3 text-sm" role="status">
+            {note}
+          </p>
+        )}
+  
+          </div>
+      )}
+      {tab === 'topic' && (
+        <div className="mt-4">
+          {note && <p className="mb-3 rounded-[16px] border-[1.5px] border-black bg-white p-3 text-sm" role="status">{note}</p>}
+          <LessonBuilder
+            lesson={lesson}
+            template={template}
+            onChange={setLesson}
+            onMake={() => onMake(true)}
+            onTurnIntoText={() => {
+              setDraft(buildScript(lesson));
+              setTab('write');
+            }}
+          />
         </div>
       )}
-      {note && (
-        <p className="mt-3 rounded-[12px] border border-river bg-bone p-3 text-sm" role="status">
-          {note}
-        </p>
+      {tab === 'template' && (
+        <div className="mt-4">
+          <p className="text-ash">{en.lesson.chooseTemplate}</p>
+          <TemplateCards
+            onPick={(tpl) => {
+              setLesson({ ...EMPTY_LESSON, points: tpl.example.points.map(() => ''), template: tpl.id });
+              setTab('topic');
+            }}
+          />
+        </div>
       )}
 
+      {tab !== 'template' && (
       <fieldset className="mt-8">
         <legend className="font-display font-semibold">{en.shape.label}</legend>
         <div className="mt-2 grid grid-cols-3 gap-3">
@@ -150,17 +214,16 @@ export function StartScreen() {
           ))}
         </div>
       </fieldset>
+      )}
 
-      <Button
-        variant="primary"
-        className="mt-6 w-full py-4 text-xl"
-        disabled={words === 0}
-        title={words === 0 ? en.makeHint : undefined}
-        onClick={onMake}
-      >
-        {en.make} <Play size={20} fill="currentColor" aria-hidden="true" />
-      </Button>
-      {words === 0 && <p className="mt-2 text-center text-sm text-ash">{en.makeHint}</p>}
+      {tab === 'write' && (
+        <>
+          <Button variant="primary" className="mt-6 w-full py-4 text-xl" disabled={words === 0} title={words === 0 ? en.makeHint : undefined} onClick={() => onMake()}>
+            {en.make} <Play size={20} fill="currentColor" aria-hidden="true" />
+          </Button>
+          {words === 0 && <p className="mt-2 text-center text-sm text-ash">{en.makeHint}</p>}
+        </>
+      )}
       <p className="mt-3 text-center">
         <Button variant="ghost" onClick={startBlank}>{en.editor.blank}</Button>
       </p>

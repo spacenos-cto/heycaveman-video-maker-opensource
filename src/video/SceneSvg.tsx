@@ -4,7 +4,8 @@
 import { CavemanRig } from '../caveman/CavemanRig';
 import { assetById } from '../director/props';
 import { isUpload, uploadHref, uploadRef } from '../editor/uploads';
-import type { Caption, Project, Scene, Shape } from '../types';
+import { QUIZ_REVEAL_MS } from '../director/lesson';
+import type { Caption, Project, Quiz, Scene, Shape } from '../types';
 import { MOODS, type MoodSpec } from './moods';
 import { spring } from './spring';
 import { FPS, SIZES } from './timeline';
@@ -48,7 +49,9 @@ export const captionVisible = (c: Caption, frame: number) =>
 /** The caveman's spot in a scene as a placement (% of frame): feet centre, height, turn. */
 export function cavemanAt(project: Project, scene: Scene) {
   const spot = CAVEMAN_SPOT[project.shape];
-  return scene.cavemanAt ?? { x: scene.props.length ? spot.withProps : spot.x, y: spot.feet, scale: spot.height, rotation: 0 };
+  // Quiz and recap cards fill the right side, so the caveman steps aside for them.
+  const aside = scene.props.length || scene.kind === 'quiz' || scene.kind === 'recap';
+  return scene.cavemanAt ?? { x: aside ? spot.withProps : spot.x, y: spot.feet, scale: spot.height, rotation: 0 };
 }
 
 /** The same in frame pixels, with the rig's width. */
@@ -163,11 +166,125 @@ function EndCard({ project, frame, width, height, hrefFor }: { project: Project;
   );
 }
 
+const INK = '#1F1A17';
+
+/** Text that wraps inside a box, set in the caption face. */
+function BoxText({ text, x, y, w, size, anchor = 'start', fill = INK }: { text: string; x: number; y: number; w: number; size: number; anchor?: 'start' | 'middle'; fill?: string }) {
+  const lines = wrap(text.split(/\s+/).filter(Boolean), size, w);
+  return (
+    <text x={x} y={y} fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size} fill={fill} textAnchor={anchor}>
+      {lines.map((l, i) => (
+        <tspan key={i} x={x} dy={i ? size * 1.1 : 0}>
+          {l.join(' ')}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+const linesOf = (text: string, size: number, w: number) => wrap(text.split(/\s+/).filter(Boolean), size, w).length;
+
+/** Title card (prd.md > F12.1): the topic, huge, on a tilted sticker. */
+function TitleCard({ text, frame, width, height }: { text: string; frame: number; width: number; height: number }) {
+  const short = Math.min(width, height);
+  const size = short * (text.length > 22 ? 0.1 : 0.14);
+  const n = linesOf(text, size, width * 0.8);
+  const boxH = n * size * 1.1 + size * 0.7;
+  const enter = Math.min(1.04, spring(frame, FPS, 10, 160));
+  return (
+    <g data-testid="title-card" transform={`translate(${width / 2} ${height * 0.08 + boxH / 2}) rotate(-2.5) scale(${enter})`}>
+      <rect x={-width * 0.44} y={-boxH / 2} width={width * 0.88} height={boxH} rx={size * 0.35} fill="#FFFFFF" stroke={INK} strokeWidth={short * 0.008} />
+      <BoxText text={text} x={0} y={-boxH / 2 + size * 1.0} w={width * 0.8} size={size} anchor="middle" />
+    </g>
+  );
+}
+
+/** Recap (prd.md > F12.3): the recap line as bold word-art the caveman points at. */
+function RecapCard({ text, frame, width, height, shape }: { text: string; frame: number; width: number; height: number; shape: Shape }) {
+  const short = Math.min(width, height);
+  const w = shape === 'tall' ? width * 0.86 : width * 0.5;
+  const x = shape === 'tall' ? width * 0.07 : width * 0.44;
+  const size = short * 0.085;
+  const n = linesOf(text, size, w - size);
+  const boxH = n * size * 1.12 + size * 1.6;
+  const y = shape === 'tall' ? height * 0.1 : (height - boxH) / 2 - height * 0.06;
+  const enter = Math.min(1, spring(frame - 6, FPS, 12, 180));
+  return (
+    <g data-testid="recap-card" opacity={enter} transform={`translate(0 ${(1 - enter) * 30})`}>
+      <rect x={x} y={y} width={w} height={boxH} rx={size * 0.4} fill="#FFD731" stroke={INK} strokeWidth={short * 0.008} />
+      <text x={x + size * 0.5} y={y + size * 0.85} fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 0.45} fill={INK}>REMEMBER</text>
+      <BoxText text={text} x={x + size * 0.5} y={y + size * 1.75} w={w - size} size={size} />
+    </g>
+  );
+}
+
+/** Quiz (prd.md > F12.2): question, a countdown while everyone thinks, then the answer with a ding. */
+function QuizCard({ quiz, scene, frame, width, height, shape }: { quiz: Quiz; scene: Scene; frame: number; width: number; height: number; shape: Shape }) {
+  const short = Math.min(width, height);
+  const tall = shape === 'tall';
+  const x = tall ? width * 0.06 : width * 0.4;
+  const w = tall ? width * 0.88 : width * 0.56;
+  const size = short * 0.06;
+  const ms = (frame / FPS) * 1000;
+  const revealAt = scene.durationMs - QUIZ_REVEAL_MS;
+  const thinkAt = revealAt - quiz.thinkSeconds * 1000;
+  const revealed = ms >= revealAt;
+  const left = Math.max(0, Math.ceil((revealAt - ms) / 1000));
+  const qLines = linesOf(quiz.question, size, w - size);
+  const qH = qLines * size * 1.12 + size * 1.5;
+  const y0 = height * (tall ? 0.06 : 0.07);
+  const opts = quiz.options ?? [];
+  const optH = size * 1.5;
+  const optsY = y0 + qH + size * 0.5;
+  const afterOpts = optsY + (opts.length ? Math.ceil(opts.length / 2) * (optH + size * 0.35) : 0);
+  const pop = Math.min(1, spring(Math.max(0, frame - (revealAt / 1000) * FPS), FPS, 10, 200));
+  const COLORS = ['#E9CCFF', '#DCEEFF', '#FFE9A8', '#C9F4DF'];
+  return (
+    <g data-testid="quiz-card">
+      <rect x={x} y={y0} width={w} height={qH} rx={size * 0.45} fill="#FFFFFF" stroke={INK} strokeWidth={short * 0.007} />
+      <text x={x + size * 0.5} y={y0 + size * 0.8} fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 0.5} fill="#5C4ADE">QUIZ TIME</text>
+      <BoxText text={quiz.question} x={x + size * 0.5} y={y0 + size * 1.6} w={w - size} size={size} />
+      {opts.map((o, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const ow = (w - size * 0.35) / 2;
+        const ox = x + col * (ow + size * 0.35);
+        const oy = optsY + row * (optH + size * 0.35);
+        const right = revealed && quiz.correct === i;
+        return (
+          <g key={i} data-testid="quiz-option" data-correct={right ? 'true' : undefined} opacity={revealed && !right ? 0.45 : 1}>
+            <rect x={ox} y={oy} width={ow} height={optH} rx={optH / 2} fill={right ? '#55DB9C' : COLORS[i % 4]} stroke={INK} strokeWidth={short * (right ? 0.01 : 0.006)} />
+            <text x={ox + optH * 0.5} y={oy + optH * 0.66} fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 0.8} fill={INK}>
+              {String.fromCharCode(65 + i)}. {o}
+            </text>
+          </g>
+        );
+      })}
+      {ms >= thinkAt && !revealed && (
+        <g data-testid="quiz-countdown" transform={`translate(${x + w - size * 1.4} ${afterOpts + size * 1.8})`}>
+          <circle r={size * 1.25} fill="#FB4903" stroke={INK} strokeWidth={short * 0.007} />
+          <text y={size * 0.5} textAnchor="middle" fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 1.4} fill="#FFFFFF">{left}</text>
+          <text x={-size * 1.8} y={size * 0.25} textAnchor="end" fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 0.8} fill={INK}>Think…</text>
+        </g>
+      )}
+      {revealed && (
+        <g data-testid="quiz-answer" transform={`translate(${x + w / 2} ${afterOpts + size * 1.8}) scale(${pop}) rotate(-2)`}>
+          <rect x={-w / 2} y={-size * 1.05} width={w} height={size * 2.1} rx={size} fill="#55DB9C" stroke={INK} strokeWidth={short * 0.008} />
+          <text y={size * 0.35} textAnchor="middle" fontFamily={CAPTION_FONT} fontWeight={800} fontSize={size * 0.95} fill={INK}>
+            {quiz.answer ? `✓ ${quiz.answer}` : 'Discuss!'}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
 export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, embeddedCss, className, title, editing }: SceneSvgProps) {
   const { width, height } = SIZES[project.shape];
   const mood = MOODS[project.mood];
   const { cx, feet, h: rigH, w: rigW, rotation: rigTurn } = cavemanBox(project, scene);
   const bg = scene.background;
+  const ms = (frame / FPS) * 1000;
+  const quizPhase = scene.kind === 'quiz' && scene.quiz ? (ms >= scene.durationMs - QUIZ_REVEAL_MS ? 'reveal' : 'ask') : undefined;
   const setting = bg.type === 'setting' ? assetById(bg.assetId) : undefined;
   // Captions showing now stack upwards from the bottom, so two at once never overlap.
   let lift = 0;
@@ -224,15 +341,18 @@ export function SceneSvg({ project, scene, frame, index, hrefFor = defaultHref, 
             <g transform={`rotate(${rigTurn} ${cx} ${feet}) translate(${cx - rigW / 2} ${feet - rigH}) scale(${rigH / 320})`}>
               <CavemanRig
                 design={project.caveman}
-                motion={scene.motion}
-                expression={scene.expression}
+                motion={quizPhase === 'reveal' ? 'celebrate' : scene.kind === 'quiz' ? 'think' : scene.motion}
+                expression={quizPhase === 'reveal' ? 'happy' : scene.expression}
                 frame={frame}
                 blinkSeed={index}
                 mouthOpen={scene.voice.envelope ? (scene.voice.envelope[frame] ?? 0) : undefined}
               />
             </g>
           )}
-          {captions.map(({ c, i, at, on }) => (
+          {scene.kind === 'quiz' && scene.quiz && <QuizCard quiz={scene.quiz} scene={scene} frame={frame} width={width} height={height} shape={project.shape} />}
+          {scene.kind === 'title' && <TitleCard text={scene.captions[0]?.text ?? scene.words} frame={frame} width={width} height={height} />}
+          {scene.kind === 'recap' && <RecapCard text={scene.captions[0]?.text ?? scene.words} frame={frame} width={width} height={height} shape={project.shape} />}
+          {scene.kind !== 'title' && scene.kind !== 'recap' && captions.map(({ c, i, at, on }) => (
             <g key={i} opacity={on ? 1 : 0}>
               <CaptionText caption={c} mood={mood} shape={project.shape} frame={editing ? 30 : frame - ((c.startMs ?? 0) / 1000) * FPS} width={width} height={height} lift={at} />
             </g>

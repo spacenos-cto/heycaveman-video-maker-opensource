@@ -5,7 +5,7 @@ import { useOffline } from '../offline/status';
 import { storage, storageBlocked } from '../storage/db';
 import { packProject, projectFileName, unpackProject } from '../storage/projectFile';
 import { claimProject, releaseProject } from '../storage/tabs';
-import type { Project } from '../types';
+import type { LessonFields, Project } from '../types';
 import { loadUploads, uploadIds } from '../editor/uploads';
 import { emptyHistory, record, redo as redoStep, undo as undoStep, type History } from './history';
 
@@ -34,6 +34,8 @@ type AppState = {
   remakeId: string | null;
   /** Which scene the Editor opens on. */
   editorStart: number;
+  /** Make from the Lesson Builder instead of the text box. */
+  pendingLesson: LessonFields | null;
   setDraft: (text: string) => void;
   go: (screen: Screen) => void;
   /** Replace the open project (auto-saved). Changes to the same video can be undone; `key` merges typing into one step. */
@@ -91,6 +93,7 @@ export const useApp = create<AppState>((set, get) => ({
   history: emptyHistory(),
   remakeId: null,
   editorStart: 0,
+  pendingLesson: null,
   setDraft: (draft) => {
     try {
       localStorage.setItem(DRAFT_KEY, draft);

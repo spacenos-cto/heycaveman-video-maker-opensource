@@ -16,3 +16,20 @@ export function sceneDuration(words: string, speed: keyof typeof WORDS_PER_MINUT
 export function estimateSeconds(text: string): number {
   return Math.round((countWords(text) / WORDS_PER_MINUTE.normal) * 60);
 }
+
+const QUIZ_REVEAL_MS = 2800; // keep in step with lesson.ts
+
+/**
+ * How long a scene lasts: its words (or voice), plus a quiz's thinking countdown and answer reveal
+ * (devpost/prd.md > F12.2), plus a little extra for the big title and recap word-art.
+ */
+export function sceneLength(
+  scene: { kind: string; words: string; quiz?: { thinkSeconds: number } },
+  speed: keyof typeof WORDS_PER_MINUTE,
+  voiceMs?: number,
+): number {
+  const base = sceneDuration(scene.words, speed, voiceMs);
+  if (scene.kind === 'quiz' && scene.quiz) return base + scene.quiz.thinkSeconds * 1000 + QUIZ_REVEAL_MS;
+  if (scene.kind === 'title' || scene.kind === 'recap') return base + 500;
+  return base;
+}

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { CavemanRig } from '../caveman/CavemanRig';
 import { newProject } from '../director';
+import { buildScript, newLessonProject } from '../director/lesson';
 import { clean } from '../director/clean';
 import { group } from '../director/group';
 import { split } from '../director/split';
@@ -21,7 +22,8 @@ export function MakingScreen() {
   const [showDetails, setShowDetails] = useState(false);
   const [frame, setFrame] = useState(0);
   const cancelled = useRef(false);
-  const sceneCount = group(split(clean(draft).text)).length;
+  const pending = useApp((s) => s.pendingLesson);
+  const sceneCount = group(split(clean(pending ? buildScript(pending) : draft).text)).length + (pending && pending.titleCard !== false ? 1 : 0);
 
   useEffect(() => {
     const raf = { id: 0 };
@@ -43,7 +45,9 @@ export function MakingScreen() {
           if (cancelled.current) return;
           setStep(i);
         }
-        const made = newProject(draft, projectDefaults());
+        const lesson = useApp.getState().pendingLesson;
+        const made = lesson ? newLessonProject(lesson, projectDefaults()) : newProject(draft, projectDefaults());
+        useApp.setState({ pendingLesson: null });
         if (cancelled.current) return;
         // Re-make replaces the edited video in place (one Undo brings the edits back).
         const { remakeId, project: open, setRemakeId } = useApp.getState();

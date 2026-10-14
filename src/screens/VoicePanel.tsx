@@ -11,6 +11,7 @@ import { loadVoices, speak } from '../voice/voiceClient';
 import { DEFAULT_VOICE, useVoice } from '../voice/voiceStore';
 import { removeVoices, speakable, SPEEDS } from '../voice/voicing';
 import { RecordDialog } from './RecordDialog';
+import { useSettings } from '../store/settings';
 
 type Mode = 'builtin' | 'recorded' | 'none';
 
@@ -157,6 +158,18 @@ export function VoicePanel({ onClose }: { onClose: () => void }) {
         {mode === 'none' && (
           <Button className="mt-5" onClick={() => { setProject(removeVoices(project)); onClose(); }}>{en.voice.useNone}</Button>
         )}
+
+        <fieldset className="mt-6 border-t border-hairline pt-4 text-sm">
+          <legend className="sr-only">{en.voice.sfx}</legend>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label={en.voice.sfx}>
+            <span className="mr-1 font-semibold">{en.voice.sfx}</span>
+            {(['on', 'gentle', 'off'] as const).map((lv) => (
+              <button key={lv} type="button" aria-pressed={project.sfxLevel === lv} onClick={() => { setProject({ ...project, sfxLevel: lv, updatedAt: Date.now() }); useSettings.getState().setDefaults({ sfxLevel: lv }); }} className={`rounded-full border-[1.5px] px-3 py-1 ${project.sfxLevel === lv ? 'border-black bg-sand' : 'border-hairline bg-bone'}`}>
+                {en.voice.sfxLevels[lv]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
 
         <div className="mt-6 text-right">
           <Button onClick={onClose}>{en.voice.close}</Button>

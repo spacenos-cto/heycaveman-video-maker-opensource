@@ -57,7 +57,7 @@ export async function renderMp4(
   const capability = await checkCapability(width, height);
   if (!capability.ok) throw new ExportError('unsupported', capability.reason);
 
-  const tl = timeline(project);
+  const tl = timeline(project, { exporting: true });
   const files = tl.scenes.flatMap((s) => [
     ...s.props.map((p) => propFile(p.assetId) ?? ''),
     ...(s.background.type === 'upload' ? [uploadRef(s.background.blobId)] : []),

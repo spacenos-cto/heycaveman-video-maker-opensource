@@ -1,6 +1,6 @@
 // Give a video its voice: speak each scene with the built-in voice, or keep a recording, then re-time the
 // scene to the voice so it lasts as long as the words take (devpost/prd.md > F10, F6 Timing).
-import { sceneDuration } from '../director/timing';
+import { sceneLength } from '../director/timing';
 import { storage } from '../storage/db';
 import type { Project, Scene } from '../types';
 import { encodeWav, loudnessEnvelope } from './envelope';
@@ -20,7 +20,7 @@ async function keepClip(project: Project, scene: Scene, samples: Float32Array, s
   return {
     ...scene,
     voice: { type, blobId: id, envelope: loudnessEnvelope(samples, sampleRate), stale: false, voiceId, durationMs },
-    durationMs: sceneDuration(scene.words, project.readingSpeed, durationMs),
+    durationMs: sceneLength(scene, project.readingSpeed, durationMs),
   };
 }
 
@@ -56,7 +56,7 @@ export function removeVoices(project: Project): Project {
   return {
     ...project,
     voiceMode: 'none',
-    scenes: project.scenes.map((s) => ({ ...s, voice: { type: 'none' }, durationMs: sceneDuration(s.words, project.readingSpeed) })),
+    scenes: project.scenes.map((s) => ({ ...s, voice: { type: 'none' }, durationMs: sceneLength(s, project.readingSpeed) })),
     updatedAt: Date.now(),
   };
 }

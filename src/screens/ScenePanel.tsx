@@ -185,7 +185,41 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
               );
             })}
           </div>
+
+          {caption.text.trim() && !caption.wordArt && (
+            <div className="mt-3">
+              <p className="text-sm font-semibold">{t.keyword}</p>
+              <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-label={t.keyword}>
+                {caption.text.split(/\s+/).filter(Boolean).map((w, i) => (
+                  <button key={`${w}-${i}`} type="button" aria-pressed={caption.keyword === w} className={chip(caption.keyword === w)} onClick={() => change(editCaption(project, index, { keyword: caption.keyword === w ? undefined : w }))}>
+                    {w}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Section>
+
+        {scene.kind === 'quiz' && scene.quiz && (
+          <Section title={t.quiz}>
+            <label className="block text-sm">
+              <span className="font-semibold">{en.lesson.question}</span>
+              <input value={scene.quiz.question} onChange={(e) => change(editScene(project, index, { quiz: { ...scene.quiz!, question: e.target.value }, words: e.target.value }), `quiz:${scene.id}`)} className="mt-1 w-full rounded-[12px] border-[1.5px] border-black bg-white px-2 py-1.5" />
+            </label>
+            {!scene.quiz.options?.length && (
+              <label className="mt-2 block text-sm">
+                <span className="font-semibold">{en.lesson.answer}</span>
+                <input value={scene.quiz.answer ?? ''} placeholder="Discuss!" onChange={(e) => change(editScene(project, index, { quiz: { ...scene.quiz!, answer: e.target.value || undefined } }), `quiz-a:${scene.id}`)} className="mt-1 w-full rounded-[12px] border-[1.5px] border-black bg-white px-2 py-1.5" />
+              </label>
+            )}
+            <label className="mt-2 flex items-center gap-2 text-sm font-semibold">
+              {en.lesson.thinkTime}
+              <select value={scene.quiz.thinkSeconds} onChange={(e) => change(editScene(project, index, { quiz: { ...scene.quiz!, thinkSeconds: Number(e.target.value) } }))} className="rounded-full border-[1.5px] border-black bg-white px-2 py-1">
+                {[3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n}>{n} s</option>)}
+              </select>
+            </label>
+          </Section>
+        )}
 
         <Section title={t.caveman}>
           <p className="text-sm font-semibold">{t.action}</p>
@@ -277,6 +311,10 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
         </Section>
 
         <Section title={t.actions}>
+          <label className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" checked={!!scene.pauseHere} onChange={(e) => change(editScene(project, index, { pauseHere: e.target.checked || undefined }))} className="h-4 w-4 accent-black" />
+            {t.pauseHere}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             <Button className="px-3 py-1.5 text-sm" onClick={() => { change(duplicateScene(project, index)); onSelect(index + 1); }}>
               <Copy size={16} aria-hidden="true" /> {t.duplicate}

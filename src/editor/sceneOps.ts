@@ -1,7 +1,7 @@
 // Quick scene edits (devpost/prd.md > F8): pure functions that take a project and give back a changed
 // copy, so the undo history can keep every step and the player redraws straight away.
 import { PROP_SLOTS } from '../director/props';
-import { MIN_SCENE_MS, sceneDuration } from '../director/timing';
+import { MIN_SCENE_MS, sceneLength } from '../director/timing';
 import type { CavemanPlacement, Caption, Mood, PropPlacement, Project, Scene, Shape } from '../types';
 import { MOODS } from '../video/moods';
 import { SIZES } from '../video/timeline';
@@ -27,8 +27,9 @@ export function editScene(project: Project, index: number, patch: Partial<Omit<S
   let next: Scene = { ...old, ...patch };
   if (patch.words !== undefined && patch.words !== old.words) {
     if (old.voice.type !== 'none') next = { ...next, voice: { ...old.voice, stale: true } };
-    else next = { ...next, durationMs: sceneDuration(patch.words, project.readingSpeed) };
+    else next = { ...next, durationMs: sceneLength(next, project.readingSpeed) };
   }
+  if (patch.quiz) next = { ...next, durationMs: sceneLength(next, project.readingSpeed, next.voice.type === 'none' ? undefined : next.voice.durationMs) };
   scenes[index] = next;
   return withScenes(project, scenes);
 }
@@ -230,4 +231,14 @@ export function switchMood(project: Project, mood: Mood): Project {
     return next;
   });
   return { ...project, mood, scenes, updatedAt: Date.now() };
+}
+
+/** Reading speed (prd.md > F12.6): scenes without a voice re-time to the new pace. */
+export function setReadingSpeed(project: Project, readingSpeed: Project['readingSpeed']): Project {
+  return {
+    ...project,
+    readingSpeed,
+    scenes: project.scenes.map((s) => (s.voice.type === 'none' ? { ...s, durationMs: sceneLength(s, readingSpeed) } : s)),
+    updatedAt: Date.now(),
+  };
 }

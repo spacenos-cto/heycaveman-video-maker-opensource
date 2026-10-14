@@ -9,7 +9,7 @@ export const FILE_EXTENSION = '.caveman';
 
 const KNOWN: (keyof Project)[] = [
   'id', 'formatVersion', 'title', 'shape', 'mood', 'caveman', 'scenes', 'seed', 'voiceMode', 'sfxLevel',
-  'readingSpeed', 'endCard', 'sourceText', 'createdAt', 'updatedAt', 'deletedAt', 'voiceId', 'voiceSpeed', 'edited',
+  'readingSpeed', 'endCard', 'sourceText', 'createdAt', 'updatedAt', 'deletedAt', 'voiceId', 'voiceSpeed', 'edited', 'lesson',
 ];
 
 export class ProjectFileError extends Error {}

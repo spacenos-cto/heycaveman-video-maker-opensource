@@ -74,6 +74,22 @@ export type Scene = {
   durationMs: number;
   pauseHere?: boolean;
   voice: { type: 'builtin' | 'recorded' | 'none'; blobId?: string; envelope?: number[]; stale?: boolean; voiceId?: string; durationMs?: number };
+  quiz?: Quiz;
+};
+
+/** A quiz scene (devpost/prd.md > F12.2): question, a thinking countdown, then the answer. */
+export type Quiz = { question: string; answer?: string; options?: string[]; correct?: number; thinkSeconds: number };
+
+/** The Lesson Builder's blanks (devpost/prd.md > F3.2). */
+export type LessonFields = {
+  template?: string;
+  topic: string;
+  hook?: string;
+  points: string[];
+  example?: string;
+  recap?: string;
+  quiz?: Omit<Quiz, 'thinkSeconds'> & { thinkSeconds?: number };
+  titleCard?: boolean; // default on
 };
 
 export type Project = {
@@ -92,6 +108,7 @@ export type Project = {
   readingSpeed: 'slow' | 'normal' | 'fast';
   endCard: boolean;
   sourceText: string;
+  lesson?: LessonFields;
   createdAt: number;
   updatedAt: number;
   deletedAt?: number;
