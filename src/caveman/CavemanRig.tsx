@@ -71,7 +71,7 @@ function Face({ c, r, expression, mouth, blink }: { c: Point; r: number; express
 }
 
 function Hair({ design, c, r }: { design: CavemanDesign; c: Point; r: number }) {
-  if (design.style !== 'cartoon' || !design.hair || design.hair === 'none') return null;
+  if (design.style === 'classic' || !design.hair || design.hair === 'none') return null;
   const col = design.hairColor ?? INK;
   const top = c.y - r;
   switch (design.hair) {
@@ -94,7 +94,7 @@ function Hair({ design, c, r }: { design: CavemanDesign; c: Point; r: number }) 
 }
 
 function Extras({ design, c, r }: { design: CavemanDesign; c: Point; r: number }) {
-  if (design.style !== 'cartoon') return null;
+  if (design.style === 'classic') return null;
   const ex = r * 0.36;
   const ey = c.y - r * 0.12;
   return (
@@ -122,7 +122,7 @@ export function CavemanRig({ design, motion, expression, frame, mouthOpen, blink
   const s = solve(pose, design.headSize ?? 1);
   const shirt = design.clothesColor ?? '#3D7FC4';
   const trousers = design.trousersColor ?? INK;
-  const cartoon = design.style === 'cartoon';
+  const cartoon = design.style !== 'classic'; // premium styles (ball, blob) show as the closest free one: Cartoon
   // Blink for 4 frames every ~3.5 s, offset per scene.
   const blink = (frame + blinkSeed * 37) % 105 < 4;
   const mouth = mouthOpen ?? (talking && motion !== 'idle' ? Math.max(0, Math.sin(frame / 2.6)) * 0.55 : 0);
@@ -143,6 +143,20 @@ export function CavemanRig({ design, motion, expression, frame, mouthOpen, blink
       <path d={line(s.hip, s.neck)} stroke={INK} strokeWidth={cartoon ? 40 : 30} strokeLinecap="round" />
       <path d={line(s.hip, s.neck)} stroke={shirt} strokeWidth={cartoon ? 32 : 22} strokeLinecap="round" />
       {cartoon && design.clothes === 'labcoat' && <path d={line({ x: s.hip.x, y: s.hip.y + 6 }, s.neck)} stroke={INK} strokeWidth={2.5} />}
+      {/* clothing layers (Cartoon style only) */}
+      {cartoon && design.clothes === 'kurta' && (
+        <>
+          <path d={line(s.neck, { x: s.hip.x, y: s.hip.y + 34 })} stroke={INK} strokeWidth={44} strokeLinecap="round" />
+          <path d={line(s.neck, { x: s.hip.x, y: s.hip.y + 34 })} stroke={shirt} strokeWidth={36} strokeLinecap="round" />
+        </>
+      )}
+      {cartoon && design.clothes === 'dress' && (
+        <path d={`M${s.hip.x - 10} ${s.hip.y - 30} L${s.hip.x - 34} ${s.hip.y + 40} L${s.hip.x + 34} ${s.hip.y + 40} L${s.hip.x + 10} ${s.hip.y - 30} Z`} fill={shirt} stroke={INK} strokeWidth={4} strokeLinejoin="round" />
+      )}
+      {cartoon && design.clothes === 'formal' && (
+        <path d={`M${s.neck.x} ${s.neck.y + 4} l-6 10 l6 30 l6 -30 Z`} fill="#B8482A" stroke={INK} strokeWidth={3} strokeLinejoin="round" />
+      )}
+      {cartoon && design.clothes === 'hoodie' && <circle cx={s.neck.x} cy={s.neck.y - 4} r={20} fill={shirt} stroke={INK} strokeWidth={4} />}
       {/* arms (drawn after the torso so gestures read clearly) */}
       {[
         [s.shoulder, s.lElbow, s.lHand],

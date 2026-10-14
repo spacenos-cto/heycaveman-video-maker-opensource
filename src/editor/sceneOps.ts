@@ -2,7 +2,7 @@
 // copy, so the undo history can keep every step and the player redraws straight away.
 import { PROP_SLOTS } from '../director/props';
 import { MIN_SCENE_MS, sceneDuration } from '../director/timing';
-import type { CavemanPlacement, Caption, PropPlacement, Project, Scene, Shape } from '../types';
+import type { CavemanPlacement, Caption, Mood, PropPlacement, Project, Scene, Shape } from '../types';
 import { MOODS } from '../video/moods';
 import { SIZES } from '../video/timeline';
 
@@ -183,12 +183,21 @@ export function clampCaveman(at: CavemanPlacement): CavemanPlacement {
   return { ...at, scale: clamp(at.scale, 15, 95), x: clamp(at.x, 5, 95), y: clamp(at.y, at.scale * 0.5, 100) };
 }
 
-/** Switch the video's shape; every hand-placed item stays inside the new frame. */
+/**
+ * Switch the video's shape. Drawings still in the director's spots move to the new shape's spots (bigger
+ * caveman and phone-safe margins in Tall); hand-placed ones keep their place, kept inside the frame.
+ */
 export function switchShape(project: Project, shape: Shape): Project {
+  const oldSlots = PROP_SLOTS[project.shape];
+  const newSlots = PROP_SLOTS[shape];
+  const relayout = (p: PropPlacement): PropPlacement => {
+    const i = oldSlots.findIndex((o) => o.x === p.x && o.y === p.y && o.scale === p.scale);
+    return i >= 0 ? { ...p, ...newSlots[i % newSlots.length] } : clampProp(p, shape);
+  };
   return {
     ...project,
     shape,
-    scenes: project.scenes.map((s) => ({ ...s, props: s.props.map((p) => clampProp(p, shape)), cavemanAt: s.cavemanAt && clampCaveman(s.cavemanAt) })),
+    scenes: project.scenes.map((s) => ({ ...s, props: s.props.map(relayout), cavemanAt: s.cavemanAt && clampCaveman(s.cavemanAt) })),
     updatedAt: Date.now(),
   };
 }
@@ -202,4 +211,23 @@ export function addPicture(project: Project, index: number, ref: string): Projec
 export function blankProject(made: Project): Project {
   const empty: Project = { ...made, title: 'My new video', scenes: [], sourceText: '' };
   return { ...addSceneAfter(empty, -1), edited: false };
+}
+
+/** Switch the colour mood: automatic background colours move to the new palette, never repeating a neighbour. */
+export function switchMood(project: Project, mood: Mood): Project {
+  const from = MOODS[project.mood].backgrounds;
+  const to = MOODS[mood].backgrounds;
+  let prev: string | undefined;
+  const scenes = project.scenes.map((s) => {
+    let next = s;
+    if (s.background.type === 'color' && !s.background.manual) {
+      const at = Math.max(0, from.indexOf(s.background.color));
+      let color = to[at % to.length];
+      if (color === prev) color = to[(at + 1) % to.length];
+      next = { ...s, background: { type: 'color', color } };
+    }
+    prev = next.background.type === 'color' ? next.background.color : undefined;
+    return next;
+  });
+  return { ...project, mood, scenes, updatedAt: Date.now() };
 }

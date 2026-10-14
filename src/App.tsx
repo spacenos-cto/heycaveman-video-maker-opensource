@@ -1,6 +1,10 @@
 // The app shell: header on every screen, status banners, then the current screen
 // (devpost/spec.md > App shell and navigation). A reload with #project=<id> reopens that project.
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { CavemanRig } from './caveman/CavemanRig';
+import { CavemanSheet } from './caveman/CavemanSheet';
+import { CAVEY } from './caveman/presets';
+import { useSettings } from './store/settings';
 import { Download, Film } from 'lucide-react';
 import { en } from './i18n/en';
 import { installApp, useOffline } from './offline/status';
@@ -18,8 +22,12 @@ export function App() {
   const screen = useApp((s) => s.screen);
   const go = useApp((s) => s.go);
   const canInstall = useOffline((s) => s.canInstall);
+  const myCaveman = useSettings((s) => s.myCaveman);
+  const settingsLoaded = useSettings((s) => s.loaded);
+  const [editMine, setEditMine] = useState(false);
 
   useEffect(() => {
+    void useSettings.getState().load();
     void purgeOldDeleted().then(() => useApp.getState().refreshProjects());
     const id = location.hash.match(/^#project=([\w-]+)$/)?.[1];
     if (id) void useApp.getState().openProject(id);
@@ -36,6 +44,11 @@ export function App() {
           </button>
           <nav className="ml-auto flex items-center gap-3" aria-label="Main">
             <OfflineIndicator />
+            <button type="button" disabled={!settingsLoaded} onClick={() => setEditMine(true)} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-charcoal bg-sand" aria-label={en.caveman.avatar} title={en.caveman.avatar} data-testid="my-caveman">
+              <svg viewBox="30 10 140 140" className="h-9 w-9" aria-hidden="true">
+                <CavemanRig design={myCaveman ?? CAVEY} motion="idle" expression="happy" frame={0} talking={false} />
+              </svg>
+            </button>
             <button type="button" onClick={() => go('videos')} className="flex items-center gap-1.5 rounded-[12px] px-2 py-1 font-display font-semibold hover:bg-sand" aria-current={screen === 'videos' ? 'page' : undefined}>
               <Film size={18} aria-hidden="true" /> {en.videos.nav}
             </button>
@@ -48,6 +61,18 @@ export function App() {
         </div>
       </header>
       <StatusBanners />
+      {editMine && (
+        <CavemanSheet
+          mode="mine"
+          initial={myCaveman ?? CAVEY}
+          onCancel={() => setEditMine(false)}
+          onDone={(design) => {
+            useSettings.getState().update({ myCaveman: design });
+            useSettings.getState().markMet();
+            setEditMine(false);
+          }}
+        />
+      )}
       {screen === 'start' && <StartScreen />}
       {screen === 'making' && <MakingScreen />}
       {screen === 'player' && <PlayerScreen />}

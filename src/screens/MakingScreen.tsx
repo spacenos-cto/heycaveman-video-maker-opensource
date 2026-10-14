@@ -7,7 +7,8 @@ import { clean } from '../director/clean';
 import { group } from '../director/group';
 import { split } from '../director/split';
 import { en } from '../i18n/en';
-import { DEFAULTS, useApp } from '../store/app';
+import { useApp } from '../store/app';
+import { projectDefaults } from '../store/settings';
 import { Button } from '../ui/Button';
 
 const STEP_MS = 380; // long enough to read each step; the director itself takes milliseconds
@@ -41,7 +42,7 @@ export function MakingScreen() {
           if (cancelled.current) return;
           setStep(i);
         }
-        const made = newProject(draft, DEFAULTS);
+        const made = newProject(draft, projectDefaults());
         if (cancelled.current) return;
         // Re-make replaces the edited video in place (one Undo brings the edits back).
         const { remakeId, project: open, setRemakeId } = useApp.getState();
@@ -70,7 +71,7 @@ export function MakingScreen() {
           <line x1="0" y1="150" x2="400" y2="150" stroke="#1F1A17" strokeWidth="4" strokeLinecap="round" />
           <g transform={`translate(${40 + (Math.min(step, 3) / 3) * 220}, 0)`}>
             <svg x="0" y="10" width="88" height="141" viewBox="0 0 200 320">
-              <CavemanRig design={DEFAULTS.caveman} motion="walk" expression="determined" frame={frame} talking={false} />
+              <CavemanRig design={projectDefaults().caveman} motion="walk" expression="determined" frame={frame} talking={false} />
             </svg>
             <g transform={`translate(110, 108) rotate(${frame * 4})`}>
               <circle r="38" fill="#B8AFA3" stroke="#1F1A17" strokeWidth="5" />

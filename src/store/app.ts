@@ -1,7 +1,6 @@
 // App state: which screen is showing, the draft lesson and the open project. Every project change is
 // auto-saved on this device a moment later; there is no "unsaved" state (devpost/prd.md > F14).
 import { create } from 'zustand';
-import { CAVEY } from '../caveman/presets';
 import { useOffline } from '../offline/status';
 import { storage, storageBlocked } from '../storage/db';
 import { packProject, projectFileName, unpackProject } from '../storage/projectFile';
@@ -219,4 +218,3 @@ export const useApp = create<AppState>((set, get) => ({
   dismissNotice: () => set({ notice: null }),
 }));
 
-export const DEFAULTS = { shape: 'wide' as const, mood: 'bright' as const, caveman: CAVEY, readingSpeed: 'normal' as const };

@@ -118,7 +118,7 @@ Build mode: fast
   Learner check: Open Edit, drag a prop, resize it, search "lungs" in the library, and upload one of your own pictures. Does it feel intuitive?
   Commit: `Add the editor with stage, prop library and picture upload`
 
-- [ ] **7. Meet your caveman, and choose the shape and colour mood**
+- [x] **7. Meet your caveman, and choose the shape and colour mood**
   Becomes usable:
     - The first Make shows the Meet your caveman sheet: 4 presets, Customise with the Cartoon style (clothes, hair, glasses, facial hair, skin tone, colours, head size, name) and a live waving preview. It's saved as My caveman, with each project keeping its own copy.
     - Wide, Tall and Square work on Start and in the Player.
@@ -202,3 +202,4 @@ Activity mode:
 - Reordered on the learner's request ("allow users to edit the video scenes"): Tap a scene (was 7) and the Editor (was 8) now come right after voices as slices 5 and 6; Meet your caveman and Teacher tools move to 7 and 8. No scope change.
 - Slice 5: on phones the scene panel sits under the video, so the video now stays pinned at the top while a scene is open; caption colours (Yellow/Red/White/Outlined) are drawn by the renderer and override the mood. Re-make of an edited video replaces it in place, and one Undo brings the edits back.
 - Slice 6: the Editor's Character button (F9.5) opens the caveman designer, which is built in slice 7, so it moves there. The "Need more pictures? HeyCaveman…" line at the end of the library moves to slice 9 with the other premium mentions. Uploaded pictures are stored as WebP (keeps transparency) and travel in .caveman files as images/<id>.webp. Found while testing: opening a .caveman file lost voiceId/voiceSpeed (they were treated as unknown fields); fixed. A drawing can no longer be wider than a tall frame.
+- Slice 7: the shape check runs on the real renderer in the player (the export draws the very same SVG), across Tall/Earthy, Square/Soft and Wide/Bright. Caption text passes 7:1 in every mood; the Soft key-word colour is 4.5:1 (large bold text), not 7:1. Premium caveman styles show as Cartoon with a note. Tests start with "Meet your caveman" already seen, except the slice 7 tests.

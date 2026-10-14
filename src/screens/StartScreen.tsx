@@ -5,7 +5,11 @@ import { containsLink, countWords, isTopicOnly } from '../director/clean';
 import { estimateSeconds } from '../director/timing';
 import { EXAMPLE_LESSON } from '../data/examples';
 import { en } from '../i18n/en';
-import { DEFAULTS, useApp } from '../store/app';
+import { useApp } from '../store/app';
+import { projectDefaults, useSettings } from '../store/settings';
+import { CavemanSheet } from '../caveman/CavemanSheet';
+import type { CavemanDesign, Shape } from '../types';
+import { ShapeIcon } from '../ui/ShapeIcon';
 import { newProject } from '../director';
 import { blankProject } from '../editor/sceneOps';
 import { Button } from '../ui/Button';
@@ -16,11 +20,13 @@ const MAX_WORDS = 3000;
 export function StartScreen() {
   const { draft, setDraft, go, projects, openProject, project, setRemakeId, setProject } = useApp();
   const startBlank = () => {
-    setProject(blankProject(newProject('', DEFAULTS)));
+    setProject(blankProject(newProject('', projectDefaults())));
     useApp.setState({ editorStart: 0 });
     go('editor');
   };
   const [askRemake, setAskRemake] = useState(false);
+  const { met, markMet, update, defaults, setDefaults } = useSettings();
+  const [meet, setMeet] = useState(false);
   const recent = projects.find((p) => !p.deletedAt);
   const [note, setNote] = useState<string | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
@@ -53,6 +59,19 @@ export function StartScreen() {
       setAskRemake(true);
       return;
     }
+    // The very first Make on this device: meet your caveman first (devpost/prd.md > F4).
+    if (!met) {
+      setMeet(true);
+      return;
+    }
+    setRemakeId(null);
+    go('making');
+  };
+
+  const met_ = (design: CavemanDesign) => {
+    update({ myCaveman: design });
+    markMet();
+    setMeet(false);
     setRemakeId(null);
     go('making');
   };
@@ -115,9 +134,23 @@ export function StartScreen() {
         </p>
       )}
 
+      <fieldset className="mt-8">
+        <legend className="font-display font-semibold">{en.shape.label}</legend>
+        <div className="mt-2 grid grid-cols-3 gap-3">
+          {(['wide', 'tall', 'square'] as Shape[]).map((sh) => (
+            <label key={sh} className={`flex cursor-pointer flex-col items-center gap-1 rounded-[14px] border-2 p-3 text-center ${defaults.shape === sh ? 'border-ochre bg-sand' : 'border-hairline bg-bone'}`}>
+              <input type="radio" name="shape" value={sh} checked={defaults.shape === sh} onChange={() => setDefaults({ shape: sh })} className="sr-only" />
+              <ShapeIcon shape={sh} />
+              <span className="font-display font-semibold">{en.shape[sh]}</span>
+              <span className="text-xs text-ash">{en.shape[`${sh}Hint`]}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <Button
         variant="primary"
-        className="mt-8 w-full py-4 text-xl"
+        className="mt-6 w-full py-4 text-xl"
         disabled={words === 0}
         title={words === 0 ? en.makeHint : undefined}
         onClick={onMake}
@@ -130,6 +163,7 @@ export function StartScreen() {
       </p>
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>
+      {meet && <CavemanSheet mode="first" initial={projectDefaults().caveman} onDone={met_} />}
       {askRemake && project && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={() => setAskRemake(false)}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="remake-title" aria-describedby="remake-body" className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && setAskRemake(false)}>

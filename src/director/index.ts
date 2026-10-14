@@ -55,7 +55,7 @@ export function titleFrom(text: string): string {
   return words || 'Untitled lesson';
 }
 
-export function newProject(text: string, base: Pick<Project, 'shape' | 'mood' | 'caveman' | 'readingSpeed'>): Project {
+export function newProject(text: string, base: Pick<Project, 'shape' | 'mood' | 'caveman' | 'readingSpeed'> & Partial<Pick<Project, 'sfxLevel' | 'endCard'>>): Project {
   const { scenes, seed } = direct(text, { shape: base.shape, mood: base.mood, readingSpeed: base.readingSpeed });
   const now = Date.now();
   return {
@@ -68,9 +68,9 @@ export function newProject(text: string, base: Pick<Project, 'shape' | 'mood' | 
     scenes,
     seed,
     voiceMode: 'none',
-    sfxLevel: 'gentle',
+    sfxLevel: base.sfxLevel ?? 'gentle',
     readingSpeed: base.readingSpeed,
-    endCard: true,
+    endCard: base.endCard ?? true,
     sourceText: text,
     createdAt: now,
     updatedAt: now,

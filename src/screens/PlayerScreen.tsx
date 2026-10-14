@@ -7,10 +7,15 @@ import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import { Button } from '../ui/Button';
 import { SceneSvg } from '../video/SceneSvg';
+import { MOODS } from '../video/moods';
 import { FPS, locate, sceneFrames, timeline } from '../video/timeline';
 import { ExportPanel } from './ExportPanel';
 import { DownloadVoices, VoicePanel } from './VoicePanel';
 import { ScenePanel } from './ScenePanel';
+import { switchMood, switchShape } from '../editor/sceneOps';
+import { useSettings } from '../store/settings';
+import { ShapeIcon } from '../ui/ShapeIcon';
+import type { Mood, Shape } from '../types';
 import { useVoice } from '../voice/voiceStore';
 import { storage } from '../storage/db';
 
@@ -21,7 +26,7 @@ const fmt = (frames: number) => {
 
 
 export function PlayerScreen() {
-  const { project, go, saveProjectFile, undo, redo } = useApp();
+  const { project, go, saveProjectFile, undo, redo, setProject, readOnly } = useApp();
   const [editing, setEditing] = useState<number | null>(null);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -208,6 +213,27 @@ export function PlayerScreen() {
           <Download size={18} aria-hidden="true" /> {en.exportPanel.open}
         </Button>
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2" data-testid="look">
+        <div className="flex items-center gap-1.5" role="group" aria-label={en.shape.label}>
+          <span className="mr-1 text-sm font-semibold">{en.shape.label}</span>
+          {(['wide', 'tall', 'square'] as Shape[]).map((sh) => (
+            <button key={sh} type="button" disabled={readOnly} aria-pressed={project.shape === sh} onClick={() => { stop(); setProject(switchShape(project, sh)); useSettings.getState().setDefaults({ shape: sh }); }} className={`flex items-center gap-1 rounded-full border-2 px-2.5 py-0.5 text-sm ${project.shape === sh ? 'border-ochre bg-sand' : 'border-hairline bg-bone'}`}>
+              <ShapeIcon shape={sh} className="h-5 w-6" /> {en.shape[sh]}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5" role="group" aria-label={en.mood.label}>
+          <span className="mr-1 text-sm font-semibold">{en.mood.label}</span>
+          {(['bright', 'earthy', 'soft'] as Mood[]).map((m) => (
+            <button key={m} type="button" disabled={readOnly} aria-pressed={project.mood === m} onClick={() => { setProject(switchMood(project, m)); useSettings.getState().setDefaults({ mood: m }); }} className={`flex items-center gap-1.5 rounded-full border-2 px-2.5 py-0.5 text-sm ${project.mood === m ? 'border-ochre bg-sand' : 'border-hairline bg-bone'}`}>
+              <span className="flex" aria-hidden="true">{MOODS[m].backgrounds.slice(0, 3).map((c) => <span key={c} className="-mr-1 h-3.5 w-3.5 rounded-full border border-charcoal" style={{ background: c }} />)}</span>
+              <span className="ml-1">{en.mood[m]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      {project.caveman.style !== 'classic' && project.caveman.style !== 'cartoon' && <p className="mt-2 text-sm text-ash">{en.caveman.premiumNote}</p>}
 
       {project.voiceMode === 'none' && !cardDismissed && voice.status !== 'ready' && voice.status !== 'unsupported' && (
         <div className="panel mt-4 flex flex-wrap items-center gap-3 p-4" data-testid="voice-card">

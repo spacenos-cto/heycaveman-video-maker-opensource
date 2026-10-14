@@ -1,7 +1,9 @@
 // The Editor (devpost/prd.md > F9): scene list with drag-to-reorder and lengths, the stage, the
 // drawing library and pictures, captions with timing, and the selected item's details.
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, GripVertical, Pause, Play, Plus, Redo2, Trash2, Undo2 } from 'lucide-react';
+import { ArrowLeft, GripVertical, Pause, Play, Plus, Redo2, Smile, Trash2, Undo2 } from 'lucide-react';
+import { CavemanSheet } from '../caveman/CavemanSheet';
+import { useSettings } from '../store/settings';
 import { en } from '../i18n/en';
 import { ScenePanel } from '../screens/ScenePanel';
 import { useApp } from '../store/app';
@@ -51,6 +53,7 @@ export function EditorScreen() {
   const [playing, setPlaying] = useState(false);
   const [tab, setTab] = useState<'library' | 'scene'>('library');
   const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [designing, setDesigning] = useState(false);
   const raf = useRef(0);
 
   const scene = project?.scenes[index];
@@ -125,6 +128,9 @@ export function EditorScreen() {
         <button type="button" onClick={redo} disabled={!history.future.length || readOnly} className="rounded-[10px] p-2 disabled:opacity-30" aria-label={en.scenePanel.redo} title="Ctrl+Y">
           <Redo2 size={20} aria-hidden="true" />
         </button>
+        <Button disabled={readOnly} onClick={() => setDesigning(true)}>
+          <Smile size={18} aria-hidden="true" /> {t.character}
+        </Button>
         <Button variant="primary" onClick={() => go('player')}>
           <Play size={18} fill="currentColor" aria-hidden="true" /> {t.watch}
         </Button>
@@ -275,6 +281,18 @@ export function EditorScreen() {
           )}
         </aside>
       </div>
+      {designing && (
+        <CavemanSheet
+          mode="project"
+          initial={project.caveman}
+          onCancel={() => setDesigning(false)}
+          onDone={(design, alsoMine) => {
+            setProject({ ...project, caveman: design, updatedAt: Date.now() });
+            if (alsoMine) useSettings.getState().update({ myCaveman: design });
+            setDesigning(false);
+          }}
+        />
+      )}
     </main>
   );
 }
