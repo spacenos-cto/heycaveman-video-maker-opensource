@@ -11,6 +11,7 @@ export type Settings = {
   myCaveman?: CavemanDesign;
   classroomMode: boolean;
   theme: Theme;
+  uiSounds: boolean;
   defaults: {
     shape: Shape;
     mood: Mood;
@@ -23,7 +24,8 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   classroomMode: false,
-  theme: 'system',
+  theme: 'dark',
+  uiSounds: true,
   defaults: { shape: 'wide', mood: 'bright', sfxLevel: 'gentle', endCard: true, readingSpeed: 'normal' },
   dismissed: {},
 };
@@ -68,8 +70,8 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
   update: (patch) => {
     set(patch);
-    const { myCaveman, classroomMode, theme, defaults, dismissed } = get();
-    void storage().then((db) => db.putSetting(KEY, { myCaveman, classroomMode, theme, defaults, dismissed }));
+    const { myCaveman, classroomMode, theme, uiSounds, defaults, dismissed } = get();
+    void storage().then((db) => db.putSetting(KEY, { myCaveman, classroomMode, theme, uiSounds, defaults, dismissed }));
   },
   setDefaults: (patch) => get().update({ defaults: { ...get().defaults, ...patch } }),
   markMet: () => {

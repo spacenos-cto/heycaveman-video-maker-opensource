@@ -10,6 +10,7 @@ import { projectDefaults, useSettings } from '../store/settings';
 import { CavemanSheet } from '../caveman/CavemanSheet';
 import type { CavemanDesign, Shape } from '../types';
 import { ShapeIcon } from '../ui/ShapeIcon';
+import { HeroCaveman } from '../ui/HeroCaveman';
 import { newProject } from '../director';
 import { blankProject } from '../editor/sceneOps';
 import { Button } from '../ui/Button';
@@ -77,25 +78,32 @@ export function StartScreen() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-[720px] px-4 pb-16 pt-8 sm:pt-14">
+    <main className="mx-auto w-full max-w-[1080px] px-4 pb-20 pt-8 sm:pt-12">
       {recent && (
         <button type="button" onClick={() => void openProject(recent.id)} className="mb-5 inline-flex max-w-full items-center gap-2 truncate rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold" data-testid="continue-chip">
           ▶ {en.continueChip(recent.title)}
         </button>
       )}
-      <h1 className="font-display text-[30px] font-bold leading-tight sm:text-[46px]">
-        {en.headline.before}
-        <span className="relative inline-block">
-          {en.headline.word}
-          <svg className="absolute -bottom-2 left-0 w-full" height="12" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M3 8 C 50 2, 120 12, 197 5" stroke="#B8482A" strokeWidth="5" fill="none" strokeLinecap="round" />
-          </svg>
-        </span>
-        {en.headline.after}
-      </h1>
-      <p className="mt-3 text-ash">{en.subline}</p>
+      <section className="grid items-center gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <div className="stagger">
+          <p className="inline-flex items-center gap-2 rounded-full border border-hairline bg-bone px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-terracotta">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-moss" /> {en.eyebrow}
+          </p>
+          <h1 className="mt-4 font-display text-[34px] font-bold leading-[1.05] sm:text-[56px]">
+            {en.headline.before}
+            <span className="ember-text">{en.headline.word}</span>
+            {en.headline.after}
+          </h1>
+          <p className="mt-4 max-w-[46ch] text-lg text-ash">{en.subline}</p>
+        </div>
+        <div className="pop-in order-first mx-auto w-full max-w-[240px] sm:order-none sm:max-w-none">
+          <HeroCaveman />
+        </div>
+      </section>
 
-      <div className="mt-8" role="tablist" aria-label="How to start">
+      <div className="panel stagger mt-8 p-4 sm:p-7">
+
+      <div role="tablist" aria-label="How to start">
         <span role="tab" aria-selected="true" className="inline-block rounded-full border-2 border-charcoal bg-sand px-4 py-1.5 font-display font-semibold">
           ✏️ {en.tabs.write}
         </span>
@@ -111,7 +119,7 @@ export function StartScreen() {
         onChange={(e) => onChange(e.target.value)}
         placeholder={en.placeholder}
         rows={9}
-        className="mt-3 w-full resize-y rounded-[14px] border-2 border-charcoal bg-bone p-4 text-[17px] leading-relaxed placeholder:text-ash focus:outline-none focus-visible:outline-3 focus-visible:outline-river"
+        className="mt-3 w-full resize-y rounded-[18px] border border-hairline bg-[rgb(0_0_0/0.25)] p-5 text-[17px] leading-relaxed placeholder:text-ash/70 transition-shadow focus:outline-none focus:shadow-[0_0_0_2px_rgb(255_159_67/0.6),0_0_40px_-6px_rgb(255_95_140/0.5)] [[data-theme=light]_&]:bg-white/70"
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
         <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-ochre' : 'text-ash'}>
@@ -161,6 +169,8 @@ export function StartScreen() {
       <p className="mt-3 text-center">
         <Button variant="ghost" onClick={startBlank}>{en.editor.blank}</Button>
       </p>
+
+      </div>
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>
       {meet && <CavemanSheet mode="first" initial={projectDefaults().caveman} onDone={met_} />}

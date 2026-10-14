@@ -14,6 +14,7 @@ import { useApp } from '../store/app';
 import { EXPRESSIONS, MOTIONS, type Caption, type ManifestAsset, type MotionId } from '../types';
 import { Button } from '../ui/Button';
 import { MOODS } from '../video/moods';
+import { ui } from '../ui/uiSounds';
 
 const t = en.scenePanel;
 const label = (a: ManifestAsset) => a.names[0].replace('*', '');
@@ -56,7 +57,7 @@ function MotionChip({ motion, selected, onPick }: { motion: MotionId; selected: 
       aria-pressed={selected}
       className={`flex flex-col items-center rounded-[12px] border-2 px-1 pb-1 pt-0.5 text-xs ${selected ? 'border-ochre bg-sand' : 'border-hairline bg-bone'}`}
     >
-      <svg viewBox="0 0 200 320" className="h-12 w-8" aria-hidden="true">
+      <svg viewBox="0 0 200 320" className="rig-stage h-12 w-full rounded-[8px]" aria-hidden="true">
         <CavemanRig design={design} motion={motion} expression="happy" frame={frame} talking={false} />
       </svg>
       {t.motions[motion]}
@@ -120,7 +121,10 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
 
   const remove = () => {
     const next = deleteScene(project, index);
-    if (next === 'onlyScene') return setProblem(t.onlyScene);
+    if (next === 'onlyScene') {
+      ui.nope();
+      return setProblem(t.onlyScene);
+    }
     if (scene.voice.type === 'recorded' && !confirmDelete) return setConfirmDelete(true);
     setConfirmDelete(false);
     change(next);
@@ -248,7 +252,7 @@ export function ScenePanel({ index, onSelect, onClose }: { index: number; onSele
             <p className="text-sm text-ash">{t.noProps}</p>
           )}
           {adding ? (
-            <PropSearch full={scene.props.length >= MAX_PROPS} onAdd={(id) => change(addProp(project, index, id))} />
+            <PropSearch full={scene.props.length >= MAX_PROPS} onAdd={(id) => { ui.pop(); change(addProp(project, index, id)); }} />
           ) : (
             <Button className="mt-2 px-3 py-1.5 text-sm" onClick={() => setAdding(true)}>
               <Plus size={16} aria-hidden="true" /> {t.addProp}

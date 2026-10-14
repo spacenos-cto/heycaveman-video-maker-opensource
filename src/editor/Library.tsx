@@ -8,6 +8,7 @@ import { useApp } from '../store/app';
 import type { ManifestAsset } from '../types';
 import { addProp, editScene, MAX_PROPS } from './sceneOps';
 import { blobIdOf, keepPicture, PictureError, preparePicture, uploadIds, uploadRef, useUploads } from './uploads';
+import { ui } from '../ui/uiSounds';
 
 const t = en.editor;
 const label = (a: ManifestAsset) => a.names[0].replace('*', '');
@@ -43,6 +44,7 @@ export function Library({ sceneIndex, onAdded }: { sceneIndex: number; onAdded: 
   const pick = (a: ManifestAsset) => {
     if (a.kind === 'setting') return setProject(editScene(project, sceneIndex, { background: { type: 'setting', assetId: a.id } }));
     if (full) return;
+    ui.pop();
     setProject(addProp(project, sceneIndex, a.id));
     onAdded(scene.props.length);
   };
@@ -57,6 +59,7 @@ export function Library({ sceneIndex, onAdded }: { sceneIndex: number; onAdded: 
       setProject(addProp(latest, sceneIndex, ref));
       onAdded(latest.scenes[sceneIndex].props.length);
     } catch (e) {
+      ui.nope();
       setProblem(e instanceof PictureError && e.kind === 'type' ? t.badType : t.tooLarge);
     } finally {
       setBusy(false);

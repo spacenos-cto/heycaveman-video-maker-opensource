@@ -63,7 +63,16 @@ One-column web app, centred, max ~720 px wide on the Start screen. The surfaces,
 The header is on every screen: the logo, an offline status dot or pill, **My videos**, **Install app** (when available), and the ⋯ menu.
 
 ## Look and Feel
-Source: `scope.md > Inspiration & Identity`. Learner's v2 direction, kept word for word.
+Source: `scope.md > Inspiration & Identity`. Learner's v2 direction, kept word for word, then updated by v3 below.
+
+> **v3 — Neon Stone Age (learner's request, Oct 14 2026: "futuristic… the jury should say wow"; the v2 look and fonts read as generic).** This replaces v2's *app* look; everything **inside the video** (moods, caption font, caveman) is unchanged.
+> - **Canvas:** a night cave: deep #07070D with slow-moving aurora light (violet, magenta, cyan, a little ember), faint stars and film grain. A Daylight variant exists for Settings › Appearance.
+> - **Surfaces:** frosted glass panels; dialogs are solid night glass over a blurred page.
+> - **Actions:** pill buttons; the primary action is an ember gradient (gold → orange → pink → violet) that glows and shimmers on hover, squishes on press.
+> - **Type:** Unbounded (display, wide and futuristic) + Manrope (body). Captions in the video stay Baloo 2 for young readers.
+> - **The caveman outside the video** always stands on warm light (his ink is dark): a glowing orb on Start, lit cards in the designer and action chips.
+> - **Motion:** screens rise in, lists stagger, drawings float, the hero caveman performs his actions and leans toward the pointer. All of it stops with reduced motion.
+> - **Sound:** soft synthesized UI sounds (tap, pop, whoosh between screens, success chime, gentle "nope"), made live with Web Audio (no files), with a mute switch in the header.
 
 **The idea in one line:** *a friendly cave-painting sketchbook.* The app feels like warm paper with charcoal ink and ochre paint. It's chunky, rounded and hand-made, so it looks like the same world as the bold-outline caveman inside the video. It should never look like a generic "AI app".
 

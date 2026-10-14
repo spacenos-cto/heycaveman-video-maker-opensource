@@ -2,6 +2,7 @@
 export const en = {
   appName: 'HeyCaveman',
   edition: 'Stone Age',
+  eyebrow: 'Lesson in · cartoon out · no AI, no cloud',
   headline: { before: 'Turn your lesson into a ', word: 'cartoon', after: ' video.' },
   subline: 'Free · works offline · no sign-up · nothing leaves your device.',
   tabs: { write: 'Write it', topic: 'Start from a topic', template: 'Use a template' },
@@ -272,6 +273,8 @@ export const en = {
     squareHint: 'Posts',
   },
   mood: { label: 'Colour mood', bright: 'Bright', earthy: 'Earthy', soft: 'Soft' },
+  uiSoundsOn: 'Turn app sounds on',
+  uiSoundsOff: 'Turn app sounds off',
   continueChip: (t: string) => `Continue: "${t}"`,
   saveProjectFile: 'Save project file',
 } as const;

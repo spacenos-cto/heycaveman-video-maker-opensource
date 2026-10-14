@@ -77,6 +77,8 @@ PRD ref: `prd.md > The Core Journey` (J1, J2).
 - **Optional deployment (learner's PRD: official home stoneage.heycaveman.com):** any free static host (Cloudflare Pages, Netlify or GitHub Pages) serving `dist/`. The deploy is `npm run build` plus uploading `dist/`. It's not required for submission; decide in `6-ship`.
 
 ## Look and Feel
+**v3 (Neon Stone Age):** tokens keep their names in `src/styles/theme.css` with night-cave values, so every component re-skins from one file; fonts are `@fontsource-variable/unbounded` and `@fontsource-variable/manrope` (OFL); UI sounds are synthesized in `src/ui/uiSounds.ts`. See `prd.md > Look and Feel` v3.
+
 Implements `prd.md > Look and Feel`; nothing re-decided here.
 - **Theme tokens** (Tailwind `@theme`): `cave-paper #FBF6EC`, `bone #FFFFFF`, `sand #F1E8D6`, `charcoal #1F1A17`, `ash #6B5F55`, `ochre #E8892B`, `terracotta #B8482A`, `moss #4F7A3A`, `river #3D7FC4`, `berry #B23A48`, `hairline #E3D8C4`.
   - **Night cave theme:** the same tokens with the PRD's dark values, switched by `data-theme` on `<html>`.

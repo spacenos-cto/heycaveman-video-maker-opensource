@@ -1,81 +1,280 @@
 @import 'tailwindcss';
-@import '@fontsource/fredoka/600.css';
-@import '@fontsource/fredoka/700.css';
-@import '@fontsource/atkinson-hyperlegible/400.css';
-@import '@fontsource/atkinson-hyperlegible/700.css';
+@import '@fontsource-variable/unbounded/wght.css';
+@import '@fontsource-variable/manrope/wght.css';
 @import '@fontsource/baloo-2/800.css';
 
-/* Cave-paper sketchbook. See devpost/prd.md > Look and Feel. */
+/*
+ * Neon Stone Age (devpost/prd.md > Look and Feel, v3): a night cave lit by moving aurora light.
+ * Glass panels, glowing ember-to-magenta actions, a wide futuristic display face. The video itself keeps
+ * its own bright moods and kid-readable caption font; this is the app around it.
+ */
 @theme {
-  --color-cave-paper: #fbf6ec;
-  --color-bone: #ffffff;
-  --color-sand: #f1e8d6;
-  --color-charcoal: #1f1a17;
-  --color-ash: #6b5f55;
-  --color-ochre: #e8892b;
-  --color-terracotta: #b8482a;
-  --color-moss: #4f7a3a;
-  --color-river: #3d7fc4;
-  --color-berry: #b23a48;
-  --color-hairline: #e3d8c4;
+  --color-cave-paper: #07070d;
+  --color-bone: rgb(255 255 255 / 0.055);
+  --color-sand: rgb(255 159 67 / 0.14);
+  --color-charcoal: #f4f1ff;
+  --color-ash: #a7a2bd;
+  --color-ochre: #ff9f43;
+  --color-terracotta: #ffb36b;
+  --color-moss: #3ddc97;
+  --color-river: #3df5ff;
+  --color-berry: #ff5c8a;
+  --color-hairline: rgb(255 255 255 / 0.1);
 
-  --font-display: 'Fredoka', ui-rounded, system-ui, sans-serif;
-  --font-body: 'Atkinson Hyperlegible', system-ui, sans-serif;
-  --font-caption: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+  --font-display: 'Unbounded Variable', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Manrope Variable', system-ui, sans-serif;
+  --font-caption: 'Baloo 2', system-ui, sans-serif;
 
-  --radius-card: 14px;
-  --radius-button: 12px;
+  --radius-card: 22px;
+  --radius-button: 999px;
+
+  --ember: linear-gradient(120deg, #ffc15e 0%, #ff8a3d 38%, #ff4f8b 72%, #c94dff 100%);
+  --glow: 0 0 0 1px rgb(255 159 67 / 0.35), 0 10px 40px -8px rgb(255 95 120 / 0.55);
 }
 
-/* Night cave theme: same token names, dark values. */
-[data-theme='dark'] {
-  --color-cave-paper: #1c1815;
-  --color-bone: #26201b;
-  --color-sand: #312922;
-  --color-charcoal: #f5ede0;
-  --color-ash: #b5a898;
-  --color-ochre: #f0923a;
-  --color-hairline: #3b322a;
+/* Daylight: the same cave at dawn (Settings > Appearance). */
+[data-theme='light'] {
+  --color-cave-paper: #f5f2ff;
+  --color-bone: rgb(255 255 255 / 0.72);
+  --color-sand: rgb(255 140 60 / 0.14);
+  --color-charcoal: #17142a;
+  --color-ash: #5f5a78;
+  --color-ochre: #f2761d;
+  --color-terracotta: #c4471d;
+  --color-moss: #18834f;
+  --color-river: #0a7bd8;
+  --color-berry: #d6255c;
+  --color-hairline: rgb(23 20 42 / 0.1);
 }
 
 html {
-  font-size: 17px;
+  font-size: 16px;
+  color-scheme: dark;
+}
+[data-theme='light'] {
+  color-scheme: light;
 }
 body {
   margin: 0;
+  min-height: 100vh;
   background: var(--color-cave-paper);
   color: var(--color-charcoal);
   font-family: var(--font-body);
-  line-height: 1.5;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+.font-display {
+  letter-spacing: -0.02em;
 }
 
-/* Things you can press: 2px charcoal outline + solid "sticker" shadow; pressed = stamped in. */
+/* Lines drawn "in charcoal" become soft light lines in the cave. */
+.border-charcoal {
+  border-color: rgb(255 255 255 / 0.2);
+}
+[data-theme='light'] .border-charcoal {
+  border-color: rgb(23 20 42 / 0.22);
+}
+.bg-charcoal {
+  background: #000;
+}
+
+/* ---------- The sky: aurora light, stars and grain, behind everything ---------- */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgb(120 70 255 / 0.18), transparent 60%),
+    var(--color-cave-paper);
+}
+.sky .aurora {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.42;
+  mix-blend-mode: screen;
+  animation: drift 28s ease-in-out infinite alternate;
+}
+.sky .a1 { background: #7b3dff; top: -26vmax; left: -16vmax; opacity: 0.5; }
+.sky .a2 { background: #ff3f8e; top: 22vh; right: -30vmax; opacity: 0.3; animation-duration: 34s; animation-delay: -9s; }
+.sky .a3 { background: #1fd8ff; bottom: -34vmax; left: 14vw; opacity: 0.24; animation-duration: 40s; animation-delay: -17s; }
+.sky .a4 { background: #ff9a3d; width: 30vmax; height: 30vmax; top: 30vh; left: 30vw; opacity: 0.12; animation-duration: 46s; }
+[data-theme='light'] .sky .aurora { opacity: 0.26; mix-blend-mode: multiply; }
+.sky .stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 72% 12%, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 38% 64%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 52%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 22% 86%, #fff, transparent),
+    radial-gradient(1px 1px at 58% 34%, #fff, transparent),
+    radial-gradient(1px 1px at 94% 88%, #fff, transparent);
+  opacity: 0.55;
+  animation: twinkle 6s ease-in-out infinite alternate;
+}
+[data-theme='light'] .sky .stars { display: none; }
+.sky .grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(8vw, 6vh, 0) scale(1.18); }
+}
+@keyframes twinkle {
+  from { opacity: 0.35; }
+  to { opacity: 0.7; }
+}
+
+/* ---------- Things you can press ---------- */
 @utility sticker {
-  border: 2px solid var(--color-charcoal);
+  position: relative;
+  border: 1px solid rgb(255 255 255 / 0.16);
   border-radius: var(--radius-button);
-  box-shadow: 3px 3px 0 var(--color-charcoal);
-  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+  background-color: var(--color-bone);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 6px 20px -10px rgb(0 0 0 / 0.6);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1.3), box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: rgb(255 179 107 / 0.55);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 0 0 1px rgb(255 159 67 / 0.25), 0 12px 30px -10px rgb(255 120 80 / 0.45);
+  }
   &:active:not(:disabled) {
-    transform: translate(3px, 3px);
-    box-shadow: 0 0 0 var(--color-charcoal);
+    transform: translateY(0) scale(0.96);
   }
   &:disabled {
-    opacity: 0.55;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 }
-
-/* Containers you only read: no heavy outline. */
-@utility panel {
-  background: var(--color-bone);
-  border: 1px solid var(--color-hairline);
-  border-radius: var(--radius-card);
-  box-shadow: 0 2px 10px rgb(31 26 23 / 0.06);
+[data-theme='light'] .sticker {
+  border-color: rgb(23 20 42 / 0.14);
 }
 
-:focus-visible {
-  outline: 3px solid var(--color-river);
-  outline-offset: 3px;
+/* The primary action: an ember gradient that glows and shimmers. */
+.sticker.bg-ochre {
+  background: var(--ember);
+  background-size: 160% 160%;
+  color: #160c08 !important;
+  border-color: rgb(255 255 255 / 0.35);
+  box-shadow: var(--glow), inset 0 1px 0 rgb(255 255 255 / 0.5);
+  overflow: hidden;
+  animation: ember 6s ease-in-out infinite alternate;
+}
+.sticker.bg-ochre::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 700ms ease;
+  pointer-events: none;
+}
+.sticker.bg-ochre:hover:not(:disabled)::after {
+  transform: translateX(120%);
+}
+.sticker.bg-ochre:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px rgb(255 200 140 / 0.6), 0 16px 50px -6px rgb(255 80 140 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+@keyframes ember {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+/* ---------- Containers you only read: frosted glass ---------- */
+@utility panel {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.03));
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 30px 60px -30px rgb(0 0 0 / 0.7);
+}
+[data-theme='light'] .panel {
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: 0 20px 50px -30px rgb(40 20 90 / 0.35);
+}
+
+/* Gradient ink for headline words. */
+.ember-text {
+  background: var(--ember);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ember 5s ease-in-out infinite alternate;
+}
+
+/* ---------- Motion ---------- */
+.screen-in {
+  /* backwards, not both: a held transform would trap dialogs under the header */
+  animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.stagger > * {
+  animation: rise 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+.stagger > *:nth-child(7) { animation-delay: 360ms; }
+.stagger > *:nth-child(n + 8) { animation-delay: 420ms; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.pop-in {
+  animation: pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-12px) rotate(calc(var(--r, 0deg) + 4deg)); }
+}
+.lift {
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 220ms ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -18px rgb(255 120 80 / 0.55);
+}
+/* Bottom sheets and dialogs slide up from below. */
+[role='dialog'],
+[role='alertdialog'] {
+  animation: rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+input[type='range'] {
+  accent-color: #ff9f43;
+}
+::selection {
+  background: rgb(255 120 80 / 0.4);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-river);
+    outline-offset: 3px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -84,5 +283,28 @@ body {
   *::after {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
   }
+}
+
+/* Wherever the caveman stands outside a video, he gets warm light: his ink is drawn dark. */
+.rig-stage {
+  background: radial-gradient(circle at 50% 32%, #fffaf0 0%, #ffe6c8 58%, #ffc7a6 100%);
+  color: #1f1a17;
+}
+
+/* Dialogs: a solid night-glass sheet over a blurred, dimmed page. */
+.fixed.inset-0.z-50 {
+  background: rgb(4 3 10 / 0.62) !important;
+  backdrop-filter: blur(10px);
+}
+[role='dialog'].panel,
+[role='alertdialog'].panel {
+  background: linear-gradient(180deg, #1b1830, #110f1f);
+  border-color: rgb(255 255 255 / 0.14);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 120px -20px rgb(124 61 255 / 0.45);
+}
+[data-theme='light'] [role='dialog'].panel,
+[data-theme='light'] [role='alertdialog'].panel {
+  background: #fffdfa;
 }

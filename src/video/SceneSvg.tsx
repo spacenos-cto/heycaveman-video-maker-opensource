@@ -16,7 +16,7 @@ const CAVEMAN_SPOT: Record<Shape, { x: number; withProps: number; feet: number; 
   tall: { x: 50, withProps: 50, feet: 74, height: 36 },
 };
 
-export const CAPTION_FONT = "'Baloo 2', 'Fredoka', sans-serif";
+export const CAPTION_FONT = "'Baloo 2', sans-serif";
 
 export type SceneSvgProps = {
   project: Project;

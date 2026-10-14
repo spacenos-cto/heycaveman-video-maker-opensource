@@ -160,12 +160,12 @@ export function PlayerScreen() {
       <Button variant="ghost" className="px-0" onClick={() => go('start')}>
         <ArrowLeft size={18} aria-hidden="true" /> {en.player.back}
       </Button>
-      <h1 className="mt-2 font-display text-2xl font-bold">{project.title}</h1>
+      <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl">{project.title}</h1>
 
       {/* The video sits on a charcoal "slate" frame. Click to play or pause. */}
       <div
         ref={stage}
-        className={`mx-auto mt-4 overflow-hidden rounded-[14px] border-2 border-charcoal bg-charcoal ${editIndex !== null ? 'max-lg:sticky max-lg:top-2 max-lg:z-20' : ''}`}
+        className={`mx-auto mt-4 overflow-hidden rounded-[22px] bg-charcoal ring-1 ring-white/15 shadow-[0_40px_100px_-30px_rgb(124_61_255/0.55),0_0_0_6px_rgb(255_255_255/0.03)] ${editIndex !== null ? 'max-lg:sticky max-lg:top-2 max-lg:z-20' : ''}`}
         style={{ maxWidth: project.shape === 'wide' ? '100%' : project.shape === 'square' ? '70vh' : '40vh' }}
         data-testid="player"
         onClick={toggle}
@@ -254,7 +254,7 @@ export function PlayerScreen() {
               aria-label={en.player.scene(i + 1)}
               aria-current={i === at.index ? 'true' : undefined}
               aria-expanded={i < project.scenes.length ? editIndex === i : undefined}
-              className={`block w-40 overflow-hidden rounded-[12px] border-2 bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'} ${editIndex === i ? 'ring-2 ring-ochre ring-offset-2' : ''}`}
+              className={`lift block w-44 overflow-hidden rounded-[16px] border bg-bone text-left ${i === at.index ? 'border-ochre' : 'border-charcoal'} ${editIndex === i ? 'ring-2 ring-ochre ring-offset-2' : ''}`}
             >
               <SceneSvg project={project} scene={scene} frame={Math.min(24, sceneFrames(scene) - 1)} index={i} />
               <span className="flex items-center gap-1 truncate px-2 py-1 text-xs text-ash">

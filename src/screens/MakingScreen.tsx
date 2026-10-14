@@ -10,6 +10,7 @@ import { en } from '../i18n/en';
 import { useApp } from '../store/app';
 import { projectDefaults } from '../store/settings';
 import { Button } from '../ui/Button';
+import { ui } from '../ui/uiSounds';
 
 const STEP_MS = 380; // long enough to read each step; the director itself takes milliseconds
 
@@ -49,6 +50,7 @@ export function MakingScreen() {
         const project = remakeId && open?.id === remakeId ? { ...made, id: open.id, createdAt: open.createdAt, caveman: open.caveman } : made;
         setRemakeId(null);
         setProject(project);
+        ui.success();
         go('player');
       } catch (e) {
         setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
@@ -66,8 +68,9 @@ export function MakingScreen() {
   return (
     <main className="mx-auto flex w-full max-w-[720px] flex-col items-center px-4 pt-14 text-center">
       <h1 className="font-display text-3xl font-bold">{en.making.title}</h1>
-      <div className="relative mt-8 h-40 w-full max-w-md overflow-hidden" aria-hidden="true">
-        <svg viewBox="0 0 400 160" className="h-full w-full">
+      {/* A lit stage in the dark cave: the caveman rolls his stone wheel across while the steps tick off. */}
+      <div className="relative mt-8 w-full max-w-md overflow-hidden rounded-[26px] bg-[linear-gradient(180deg,#fff6e6,#ffd9b0)] p-3 shadow-[0_0_0_1px_rgb(255_255_255/0.4),0_30px_80px_-20px_rgb(255_120_80/0.6)]" aria-hidden="true">
+        <svg viewBox="0 0 400 160" className="h-40 w-full">
           <line x1="0" y1="150" x2="400" y2="150" stroke="#1F1A17" strokeWidth="4" strokeLinecap="round" />
           <g transform={`translate(${40 + (Math.min(step, 3) / 3) * 220}, 0)`}>
             <svg x="0" y="10" width="88" height="141" viewBox="0 0 200 320">
@@ -79,6 +82,9 @@ export function MakingScreen() {
             </g>
           </g>
         </svg>
+        <div className="mx-1 mb-1 mt-1 h-2 overflow-hidden rounded-full bg-[rgb(31_26_23/0.12)]">
+          <div className="h-full rounded-full bg-[linear-gradient(90deg,#ffc15e,#ff4f8b,#c94dff)] transition-[width] duration-300" style={{ width: `${(Math.min(step, 3) / 3) * 100}%` }} />
+        </div>
       </div>
       {error ? (
         <div className="mt-6" role="alert">
@@ -90,7 +96,7 @@ export function MakingScreen() {
           {showDetails && <pre className="mt-3 text-left text-xs text-ash">{error}</pre>}
         </div>
       ) : (
-        <ol className="mt-6 space-y-2 text-left" aria-live="polite">
+        <ol className="stagger mt-6 space-y-2 text-left" aria-live="polite">
           {labels.map((label, i) => (
             <li key={i} className={`flex items-center gap-2 ${i < step ? 'text-moss' : i === step ? 'text-charcoal' : 'text-ash'}`}>
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-current">

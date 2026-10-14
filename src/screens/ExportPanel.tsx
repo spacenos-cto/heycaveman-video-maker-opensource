@@ -11,6 +11,7 @@ import type { Project } from '../types';
 import { Button } from '../ui/Button';
 import { useVoice } from '../voice/voiceStore';
 import { staleScenes } from '../voice/voicing';
+import { ui } from '../ui/uiSounds';
 
 type Phase = 'choose' | 'unsupported' | 'working' | 'done' | 'failed';
 
@@ -63,6 +64,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
       setPhase('done');
+      ui.success();
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {
         setPhase('choose');
@@ -142,7 +144,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
 
         {phase === 'working' && (
           <div className="mt-4" aria-live="polite">
-            <svg viewBox="0 0 400 120" className="h-28 w-full" aria-hidden="true">
+            <svg viewBox="0 0 400 120" className="rig-stage h-28 w-full rounded-[18px]" aria-hidden="true">
               <line x1="0" y1="112" x2="400" y2="112" stroke="#1F1A17" strokeWidth="4" strokeLinecap="round" />
               <g transform={`translate(${20 + (pct / 100) * 250}, 0)`}>
                 <svg x="0" y="0" width="70" height="112" viewBox="0 0 200 320">
@@ -155,7 +157,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
               </g>
             </svg>
             <div className="h-3 w-full overflow-hidden rounded-full border-2 border-charcoal bg-bone" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={en.exportPanel.progress}>
-              <div className="h-full bg-ochre" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-[linear-gradient(90deg,#ffc15e,#ff4f8b,#c94dff)] transition-[width] duration-300" style={{ width: `${pct}%` }} />
             </div>
             <p className="mt-2 text-sm text-ash" data-testid="export-status">
               {pct}% {progress?.etaMs != null ? `· ${en.exportPanel.timeLeft(fmtMs(progress.etaMs))}` : ''}
