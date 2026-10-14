@@ -37,13 +37,13 @@ function sources() {
     const [sha, path] = line.split(' ');
     if (!path || seen.has(sha)) return [];
     seen.add(sha);
-    return [{ path: `${path} @${sha.slice(0, 8)}`, read: () => git('cat-file', '-p', sha) }];
+    return [{ path: `${path} @${sha.slice(0, 8)}`, file: path, read: () => git('cat-file', '-p', sha) }];
   });
 }
 
 const problems = [];
-for (const { path, read } of sources()) {
-  if (SKIP.test(path) || path.startsWith('.check-public.local')) continue;
+for (const { path, file, read } of sources()) {
+  if (SKIP.test(file ?? path) || path.startsWith('.check-public.local')) continue;
   let text;
   try { text = read(); } catch { continue; }
   text.split(/\r?\n/).forEach((line, i) => {

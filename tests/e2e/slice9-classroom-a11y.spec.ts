@@ -60,6 +60,8 @@ test('Classroom mode (?classroom) shows zero HeyCaveman mentions; normally at mo
   // Dismissed stays dismissed.
   await page.getByRole('button', { name: 'Back to my video' }).click();
   await page.locator('[data-premium=moreLooks]').getByRole('button', { name: 'Hide this HeyCaveman note' }).click();
+  await expect(page.locator('[data-premium=moreLooks]')).toHaveCount(0);
+  await page.waitForTimeout(500); // let the choice save
   await page.reload();
   await expect(page.getByTestId('player')).toBeVisible();
   await expect(page.locator('[data-premium=moreLooks]')).toHaveCount(0);

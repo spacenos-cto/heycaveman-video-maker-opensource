@@ -21,7 +21,8 @@ export const PREMIUM: Record<PremiumId, { text: string; cta: string }> = {
 
 /** Should this mention show right now? */
 export function usePremium(id: PremiumId): boolean {
-  return useSettings((s) => !s.classroomMode && !s.dismissed[`premium:${id}`]);
+  // Wait for settings to load, so a dismissed note never flashes back for a moment.
+  return useSettings((s) => s.loaded && !s.classroomMode && !s.dismissed[`premium:${id}`]);
 }
 
 export const dismissPremium = (id: PremiumId) => useSettings.getState().dismiss(`premium:${id}`);
