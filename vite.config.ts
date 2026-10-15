@@ -20,7 +20,7 @@ export default defineConfig({
       devOptions: { enabled: false },
       injectManifest: {
         // .woff is a fallback older browsers never need offline; woff2 covers every supported browser.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,wav,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,wav,webmanifest}'],
         // The voice engine (WebAssembly) is saved on first use instead, keeping the first download small.
         globIgnores: ['**/*.woff', 'ort/**', '**/kokoroWorker-*.js'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
