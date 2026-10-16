@@ -68,6 +68,9 @@ export type Scene = {
   expression: ExpressionId;
   hideCaveman?: boolean;
   cavemanAt?: CavemanPlacement;
+  /** Set once the caption or drawings are changed by hand; until then they follow the words live. */
+  captionByHand?: boolean;
+  propsByHand?: boolean;
   background: Background;
   props: PropPlacement[];
   sfx?: string;

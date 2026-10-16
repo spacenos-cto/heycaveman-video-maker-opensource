@@ -1,6 +1,7 @@
 // Quick scene edits (devpost/prd.md > F8): pure functions that take a project and give back a changed
 // copy, so the undo history can keep every step and the player redraws straight away.
-import { PROP_SLOTS } from '../director/props';
+import { makeCaption } from '../director/caption';
+import { chooseProps, PROP_ASSETS, PROP_SLOTS, rankAssets } from '../director/props';
 import { MIN_SCENE_MS, sceneLength } from '../director/timing';
 import type { CavemanPlacement, Caption, Mood, PropPlacement, Project, Scene, Shape } from '../types';
 import { MOODS } from '../video/moods';
@@ -16,9 +17,16 @@ function withScenes(project: Project, scenes: Scene[]): Project {
   return { ...project, scenes, edited: true, updatedAt: Date.now() };
 }
 
+/** The caption and drawings the director would give these words (the same rules as Make). */
+function directedFor(words: string, project: Project, index: number) {
+  const firstMatch = rankAssets(words, PROP_ASSETS)[0]?.asset.names.find((n) => !n.includes(' '))?.replace('*', '');
+  const previous = project.scenes[index - 1]?.props.map((p) => p.assetId);
+  return { caption: makeCaption(words, firstMatch), props: chooseProps(words, project.shape, previous) };
+}
+
 /**
- * Change one scene. New words mark its voice out of date (Update re-voices just that scene) and,
- * without a voice, re-time the scene to the new reading length.
+ * Change one scene. New words show at once: the caption and drawings follow them (until you've changed
+ * those by hand), the voice is marked out of date, and a scene without a voice re-times to the new length.
  */
 export function editScene(project: Project, index: number, patch: Partial<Omit<Scene, 'id'>>): Project {
   const scenes = [...project.scenes];
@@ -26,6 +34,14 @@ export function editScene(project: Project, index: number, patch: Partial<Omit<S
   if (!old) return project;
   let next: Scene = { ...old, ...patch };
   if (patch.words !== undefined && patch.words !== old.words) {
+    if (old.kind === 'line') {
+      const directed = directedFor(patch.words, project, index);
+      if (!old.captionByHand && !patch.captions) {
+        const style = old.captions[0]?.style;
+        next = { ...next, captions: patch.words.trim() ? [{ ...directed.caption, ...(style ? { style } : {}) }, ...old.captions.slice(1)] : old.captions.slice(1) };
+      }
+      if (!old.propsByHand && !patch.props) next = { ...next, props: directed.props };
+    }
     if (old.voice.type !== 'none') next = { ...next, voice: { ...old.voice, stale: true } };
     else next = { ...next, durationMs: sceneLength(next, project.readingSpeed) };
   }
@@ -45,7 +61,7 @@ export function editCaption(project: Project, index: number, patch: Partial<Capt
     if (next.keyword && !next.text.toLowerCase().includes(next.keyword.toLowerCase())) delete next.keyword;
   }
   const captions = next.text.trim() || next.style ? [next, ...scene.captions.slice(1)] : scene.captions.slice(1);
-  return editScene(project, index, { captions });
+  return editScene(project, index, { captions, ...(patch.text !== undefined || patch.keyword !== undefined ? { captionByHand: true } : {}) });
 }
 
 export function duplicateScene(project: Project, index: number): Project {
@@ -103,13 +119,13 @@ export function addProp(project: Project, index: number, assetId: string): Proje
   const slot = slots[n % slots.length];
   const nudge = Math.floor(n / slots.length) * 8; // later props step aside so none hides another
   const prop = { assetId, x: Math.max(8, slot.x - nudge), y: Math.min(80, slot.y + nudge / 2), scale: slot.scale, rotation: 0 };
-  return editScene(project, index, { props: [...scene.props, prop] });
+  return editScene(project, index, { props: [...scene.props, prop], propsByHand: true });
 }
 
 export function removeProp(project: Project, index: number, propIndex: number): Project {
   const scene = project.scenes[index];
   if (!scene) return project;
-  return editScene(project, index, { props: scene.props.filter((_, i) => i !== propIndex) });
+  return editScene(project, index, { props: scene.props.filter((_, i) => i !== propIndex), propsByHand: true });
 }
 
 // ---- The Editor (devpost/prd.md > F9) ----
@@ -137,7 +153,7 @@ export function setProp(project: Project, index: number, propIndex: number, patc
   const scene = project.scenes[index];
   if (!scene?.props[propIndex]) return project;
   const props = scene.props.map((p, i) => (i === propIndex ? { ...p, ...patch } : p));
-  return editScene(project, index, { props });
+  return editScene(project, index, { props, propsByHand: true });
 }
 
 export function setCavemanAt(project: Project, index: number, at: CavemanPlacement | undefined): Project {
@@ -148,7 +164,7 @@ export function addCaption(project: Project, index: number, text = 'New caption'
   const scene = project.scenes[index];
   if (!scene) return project;
   const startMs = scene.captions.length ? Math.round(scene.durationMs / 2) : 0;
-  return editScene(project, index, { captions: [...scene.captions, { text, startMs }] });
+  return editScene(project, index, { captions: [...scene.captions, { text, startMs }], captionByHand: true });
 }
 
 export function editCaptionAt(project: Project, index: number, captionIndex: number, patch: Partial<Caption>): Project {
@@ -160,13 +176,13 @@ export function editCaptionAt(project: Project, index: number, captionIndex: num
     if (patch.text !== undefined) next.wordArt = false;
     return next;
   });
-  return editScene(project, index, { captions });
+  return editScene(project, index, { captions, captionByHand: true });
 }
 
 export function removeCaption(project: Project, index: number, captionIndex: number): Project {
   const scene = project.scenes[index];
   if (!scene) return project;
-  return editScene(project, index, { captions: scene.captions.filter((_, i) => i !== captionIndex) });
+  return editScene(project, index, { captions: scene.captions.filter((_, i) => i !== captionIndex), captionByHand: true });
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));

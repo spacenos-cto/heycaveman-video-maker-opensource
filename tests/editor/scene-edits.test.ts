@@ -105,4 +105,18 @@ describe('scene edits (prd.md > F8)', () => {
     }
     expect(removeProp(p, 0, 0).scenes[0].props).toHaveLength(MAX_PROPS - 1);
   });
+
+  it('new words update the caption and drawings at once, until those are changed by hand', () => {
+    const p = editScene(base(), 1, { words: 'A rocket flies to the moon.' });
+    expect(p.scenes[1].captions[0].text).toMatch(/rocket/i);
+    expect(p.scenes[1].props.map((x) => x.assetId)).toContain('moon');
+    const byHand = editCaption(p, 1, { text: 'My own words' });
+    const again = editScene(byHand, 1, { words: 'Pizza is my favourite food.' });
+    expect(again.scenes[1].captions[0].text).toBe('My own words');
+    expect(again.scenes[1].props.map((x) => x.assetId)).toContain('pizza');
+    const propsByHand = removeProp(again, 1, 0);
+    const third = editScene(propsByHand, 1, { words: 'A car drives home.' });
+    expect(third.scenes[1].props).toEqual(propsByHand.scenes[1].props);
+  });
 });
+
