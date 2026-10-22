@@ -102,16 +102,18 @@ export function StartScreen() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-2">
+    <main className="mx-auto w-full max-w-[1400px] px-4 pb-20 pt-2">
       {recent && (
         <button type="button" onClick={() => void openProject(recent.id)} className="lift relative z-10 mb-3 inline-flex max-w-full items-center gap-2 truncate rounded-full border-[1.5px] border-black bg-mint px-4 py-2 text-sm font-extrabold uppercase tracking-[0.03em]" data-testid="continue-chip">
           ▶ {en.continueChip(recent.title)}
         </button>
       )}
-      <section className="relative pt-2 sm:pt-6">
+      {/* Wide screens: the hero sits beside the lesson card, so Make my video is on the first screen (PRD CLUTTER-1). */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] lg:items-center lg:gap-10">
+      <section className="relative pt-2 sm:pt-6 lg:pt-0">
         <HeroCaveman />
-        <div className="stagger relative mt-[14%] text-center sm:mt-[9%]">
-          <h1 className="mx-auto max-w-[16ch] text-[34px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[60px]">
+        <div className="stagger relative mt-[14%] text-center sm:mt-[9%] lg:mt-[16%]">
+          <h1 className="mx-auto max-w-[16ch] text-[34px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[60px] lg:text-[44px]">
             {en.headline.before}
             <span className="inline-block -rotate-2 rounded-[14px] border-[1.5px] border-black bg-ember px-3 text-black">{en.headline.word}</span>
             {en.headline.after}
@@ -120,7 +122,7 @@ export function StartScreen() {
         </div>
       </section>
 
-      <div className="panel stagger relative mx-auto mt-10 max-w-[900px] p-4 sm:p-7">
+      <div className="panel stagger relative mx-auto mt-10 max-w-[900px] p-4 sm:p-7 lg:mt-4 lg:w-full lg:p-6">
 
       <div role="tablist" aria-label="How to start" className="flex flex-wrap gap-2">
         {(['write', 'topic', 'template'] as const).map((k) => (
@@ -148,7 +150,7 @@ export function StartScreen() {
           value={draft}
           onChange={(e) => onChange(e.target.value)}
           placeholder={en.placeholder}
-          rows={9}
+          rows={7}
           className="mt-3 w-full resize-y rounded-[20px] border-[1.5px] border-black bg-white p-5 text-[17px] leading-relaxed placeholder:text-ash/80 transition-colors focus:bg-[#fffbe0] focus:outline-none"
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -203,7 +205,7 @@ export function StartScreen() {
       )}
 
       {tab !== 'template' && (
-      <fieldset className="mt-8">
+      <fieldset className="mt-6">
         <legend className="font-display font-semibold">{en.shape.label}</legend>
         <div className="mt-2 grid grid-cols-3 gap-3">
           {(['wide', 'tall', 'square'] as Shape[]).map((sh) => (
@@ -230,6 +232,7 @@ export function StartScreen() {
         <Button variant="ghost" onClick={startBlank}>{en.editor.blank}</Button>
       </p>
 
+      </div>
       </div>
 
       <p className="mt-10 text-center text-sm text-ash">{en.smallPrint}</p>

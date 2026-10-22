@@ -84,9 +84,9 @@ export function HeroCaveman() {
   const word = en.appName.toUpperCase();
   return (
     <div ref={box} className="relative isolate select-none" data-testid="hero">
-      <Ribbon className="absolute left-1/2 top-1/2 -z-10 h-[260%] w-[calc(100vw-28px)] -translate-x-1/2 -translate-y-[46%] [overflow-x:clip]" />
+      <Ribbon className="absolute left-1/2 top-1/2 -z-10 h-[260%] w-[calc(100vw-28px)] -translate-x-1/2 -translate-y-[46%] [overflow-x:clip] lg:[overflow-x:visible]" />
       <h2 className="sr-only">{en.appName}</h2>
-      <p className="poster letters relative whitespace-nowrap text-center text-[16vw] text-black sm:text-[15vw] xl:text-[200px]" aria-hidden="true">
+      <p className="poster letters relative whitespace-nowrap text-center text-[16vw] text-black sm:text-[15vw] lg:text-[9vw] 2xl:text-[140px]" aria-hidden="true">
         {[...word].map((ch, i) => (
           <span key={i} style={{ animationDelay: `${120 + i * 55}ms` }}>
             {ch}
