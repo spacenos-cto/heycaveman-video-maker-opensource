@@ -5,8 +5,8 @@ import { useSettings } from '../store/settings';
 
 export const HEYCAVEMAN_URL = 'https://heycaveman.com';
 export const IMPORT_URL = `${HEYCAVEMAN_URL}/import?from=stoneage`;
-/** The launch discount code shown at the handoff (set by HeyCaveman; shown, never sent). */
-export const LAUNCH_CODE = 'STONEAGE';
+/** The launch discount code shown at the handoff (set by HeyCaveman; shown, never sent). Empty = hidden until HeyCaveman confirms one. */
+export const LAUNCH_CODE: string = '';
 
 export type PremiumId = 'smallPrint' | 'lessonFooter' | 'linkCard' | 'moreLooks' | 'propLibrary' | 'lockedStyles';
 

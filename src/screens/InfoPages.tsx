@@ -213,7 +213,7 @@ export function AboutPage() {
       </Card>
       <Card title={t.aboutHeyCaveman} tone="bg-lavender">
         <p className="text-sm">{t.aboutHeyCavemanText}</p>
-        {!classroom && <p className="text-sm">{t.launchCode(LAUNCH_CODE)}</p>}
+        {!classroom && LAUNCH_CODE && <p className="text-sm">{t.launchCode(LAUNCH_CODE)}</p>}
         <Button onClick={() => openHeyCaveman(HEYCAVEMAN_URL)}>
           <ExternalLink size={16} aria-hidden="true" /> heycaveman.com
         </Button>
