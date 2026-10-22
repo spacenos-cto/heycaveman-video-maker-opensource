@@ -29,8 +29,8 @@ export default defineConfig({
         name: 'HeyCaveman · Stone Age',
         short_name: 'Stone Age',
         description: 'Type a lesson, get a cartoon explainer video. Free, offline, nothing leaves your device.',
-        theme_color: '#FBF6EC',
-        background_color: '#FBF6EC',
+        theme_color: '#dceeff',
+        background_color: '#dceeff',
         display: 'standalone',
         start_url: '/',
         icons: [

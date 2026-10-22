@@ -13,7 +13,7 @@ for (const [size, file, pad] of [
 ]) {
   const page = await browser.newPage({ viewport: { width: size, height: size } });
   await page.setContent(
-    `<html><body style="margin:0;background:#FBF6EC;display:grid;place-items:center;width:${size}px;height:${size}px">` +
+    `<html><body style="margin:0;background:#dceeff;display:grid;place-items:center;width:${size}px;height:${size}px">` +
       `<div style="width:${size * (1 - pad * 2)}px;height:${size * (1 - pad * 2)}px">${logo}</div></body></html>`,
   );
   await page.screenshot({ path: file });
