@@ -84,7 +84,7 @@ export function RecordDialog({ sceneIndex, onClose }: { sceneIndex: number; onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={phase === 'recording' ? undefined : onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/55 p-4 sm:items-center" onClick={phase === 'recording' ? undefined : onClose}>
       <div role="dialog" aria-modal="true" aria-label={`${en.voice.record}: ${en.player.scene(sceneIndex + 1)}`} className="panel w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
         <p className="text-sm text-ash">{en.player.scene(sceneIndex + 1)}</p>
         {/* Teleprompter: the line to read, big. */}

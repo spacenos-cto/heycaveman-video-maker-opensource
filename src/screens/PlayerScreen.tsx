@@ -213,8 +213,8 @@ export function PlayerScreen() {
       </div>
 
       {/* Controls sit under the video, never over the caption. */}
-      <div className="mx-auto mt-2 flex items-center gap-3 rounded-full bg-[#000] py-1.5 pl-1.5 pr-4 text-white" style={{ maxWidth }}>
-        <button type="button" onClick={toggle} aria-label={playing ? en.player.pause : en.player.play} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#000]">
+      <div className="mx-auto mt-2 flex items-center gap-3 rounded-full py-1.5 pl-1.5 pr-4" style={{ maxWidth, background: '#000', color: '#fff' }}>
+        <button type="button" onClick={toggle} aria-label={playing ? en.player.pause : en.player.play} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: '#fff', color: '#000' }}>
           {playing ? <Pause size={18} fill="currentColor" aria-hidden="true" /> : <Play size={18} fill="currentColor" aria-hidden="true" />}
         </button>
         <div className="relative min-w-0 flex-1">
@@ -275,7 +275,7 @@ export function PlayerScreen() {
       <div className="mt-4 lg:sticky lg:top-4 lg:mt-0">
         <div role="tablist" aria-label={en.player.settings} className="flex gap-1 rounded-full border-2 border-charcoal bg-bone p-1">
           {(['look', 'voice', 'scene'] as const).map((k) => (
-            <button key={k} type="button" role="tab" aria-selected={activeTab === k} onClick={() => showTab(k)} className={`h-9 flex-1 rounded-full text-[13px] font-extrabold uppercase tracking-[0.03em] ${activeTab === k ? 'bg-charcoal text-cave-paper' : ''}`}>
+            <button key={k} type="button" role="tab" aria-selected={activeTab === k} onClick={() => showTab(k)} className={`h-9 flex-1 rounded-full text-[13px] font-extrabold uppercase tracking-[0.03em] ${activeTab === k ? 'bg-ochre text-bone' : ''}`}>
               {k === 'scene' && editIndex !== null ? en.scenePanel.title(editIndex + 1) : en.player.tabs[k]}
             </button>
           ))}

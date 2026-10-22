@@ -89,7 +89,7 @@ export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetM
   const waving = frame - waveFrom < 60;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] sm:items-center sm:p-4" onClick={skip}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 sm:items-center sm:p-4" onClick={skip}>
       <div
         role="dialog"
         aria-modal="true"
@@ -156,7 +156,7 @@ export function CavemanSheet({ mode, initial, onDone, onCancel }: { mode: SheetM
                 <span className="font-semibold">{t.headSize}</span>
                 <span className="mt-1 flex items-center gap-2 text-xs text-ash">
                   {t.small}
-                  <input type="range" min={0.8} max={1.3} step={0.05} value={design.headSize} onChange={(e) => change({ headSize: Number(e.target.value) })} className="flex-1 accent-[#E8892B]" />
+                  <input type="range" min={0.8} max={1.3} step={0.05} value={design.headSize} onChange={(e) => change({ headSize: Number(e.target.value) })} className="flex-1 accent-violet" />
                   {t.big}
                 </span>
               </label>

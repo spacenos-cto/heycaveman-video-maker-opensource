@@ -30,7 +30,15 @@ export function App() {
   const theme = useSettings((s) => s.theme);
 
   // Appearance (Settings): Paper (default), Night, or follow the device.
+  // index.html applies the remembered choice before the first paint, so Night never flashes light;
+  // this waits for the saved settings so it doesn't overwrite that with the default.
   useEffect(() => {
+    if (!settingsLoaded) return;
+    try {
+      localStorage.setItem('stoneage.theme', theme);
+    } catch {
+      /* storage blocked: the first paint just uses Paper */
+    }
     const apply = () => {
       const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -39,7 +47,7 @@ export function App() {
     const mq = matchMedia('(prefers-color-scheme: dark)');
     mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
-  }, [theme]);
+  }, [theme, settingsLoaded]);
 
   // A soft tick for every press, a whoosh between screens.
   useEffect(() => {

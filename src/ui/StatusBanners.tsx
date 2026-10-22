@@ -6,7 +6,7 @@ import { useApp } from '../store/app';
 import { Button } from './Button';
 
 function Banner({ tone, children, testid }: { tone: 'info' | 'warn' | 'ok'; children: React.ReactNode; testid?: string }) {
-  const tones = { info: 'border-river', warn: 'border-ochre bg-[#FFF4D6]', ok: 'border-moss' };
+  const tones = { info: 'border-river', warn: 'border-warn bg-[#FFF4D6]', ok: 'border-moss' };
   return (
     <div role="status" data-testid={testid} className={`mx-auto mt-3 flex max-w-[1100px] flex-wrap items-center gap-3 rounded-[12px] border-2 bg-bone px-4 py-2 text-sm ${tones[tone]}`}>
       {children}

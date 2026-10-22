@@ -6,6 +6,13 @@
     <meta name="description" content="Type a lesson, get a cartoon explainer video. Free, offline, nothing leaves your device." />
     <link rel="icon" type="image/svg+xml" href="/icons/logo.svg" />
     <title>HeyCaveman · Stone Age</title>
+    <script>
+      // Paper or Night before the first paint (the app saves the choice here too).
+      try {
+        var t = localStorage.getItem('stoneage.theme');
+        if (t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

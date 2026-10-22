@@ -192,7 +192,7 @@ export function EditorScreen() {
             </Button>
             <label className="min-w-[180px] flex-1 text-sm">
               <span className="block font-semibold">{t.position}</span>
-              <input type="range" min={0} max={frames - 1} value={frame} onChange={(e) => { setPlaying(false); setFrame(Number(e.target.value)); }} className="w-full accent-[#E8892B]" />
+              <input type="range" min={0} max={frames - 1} value={frame} onChange={(e) => { setPlaying(false); setFrame(Number(e.target.value)); }} className="w-full accent-violet" />
             </label>
             <span className="pb-1 font-display tabular-nums text-ash">{sec((frame / FPS) * 1000)} / {sec(scene.durationMs)} s</span>
             {scene.voice.type === 'none' ? (
@@ -212,11 +212,11 @@ export function EditorScreen() {
               <div className="mt-2 flex flex-wrap items-end gap-4">
                 <label className="text-sm">
                   <span className="block font-semibold">{t.size}</span>
-                  <input type="range" min={4} max={90} value={prop.scale} onChange={(e) => setProject(setProp(project, index, selection.index, { scale: Number(e.target.value) }), `size:${scene.id}`)} className="accent-[#E8892B]" />
+                  <input type="range" min={4} max={90} value={prop.scale} onChange={(e) => setProject(setProp(project, index, selection.index, { scale: Number(e.target.value) }), `size:${scene.id}`)} className="accent-violet" />
                 </label>
                 <label className="text-sm">
                   <span className="block font-semibold">{t.turn}</span>
-                  <input type="range" min={-180} max={180} value={prop.rotation} onChange={(e) => setProject(setProp(project, index, selection.index, { rotation: Number(e.target.value) }), `turn:${scene.id}`)} className="accent-[#E8892B]" />
+                  <input type="range" min={-180} max={180} value={prop.rotation} onChange={(e) => setProject(setProp(project, index, selection.index, { rotation: Number(e.target.value) }), `turn:${scene.id}`)} className="accent-violet" />
                 </label>
                 <SecondsInput label={t.appears} value={prop.inMs} placeholder="0" max={scene.durationMs} onChange={(ms) => setProject(setProp(project, index, selection.index, { inMs: ms }), `in:${scene.id}`)} />
                 <SecondsInput label={t.leaves} value={prop.outMs} placeholder={t.wholeScene} max={scene.durationMs} onChange={(ms) => setProject(setProp(project, index, selection.index, { outMs: ms }), `out:${scene.id}`)} />

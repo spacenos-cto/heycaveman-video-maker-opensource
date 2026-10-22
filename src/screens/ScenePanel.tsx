@@ -237,7 +237,7 @@ export const ScenePanel = memo(function ScenePanel({ index, onSelect, onClose }:
             ))}
           </div>
           <label className="mt-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={!!scene.hideCaveman} onChange={(e) => change(editScene(project, index, { hideCaveman: e.target.checked }))} className="h-4 w-4 accent-[#E8892B]" />
+            <input type="checkbox" checked={!!scene.hideCaveman} onChange={(e) => change(editScene(project, index, { hideCaveman: e.target.checked }))} className="h-4 w-4 accent-violet" />
             {t.hideCaveman}
           </label>
         </Section>

@@ -89,7 +89,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
   const pct = progress ? Math.round((progress.frame / progress.total) * 100) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={phase === 'working' ? undefined : onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4 sm:items-center" onClick={phase === 'working' ? undefined : onClose}>
       <div
         ref={dialog}
         role="dialog"
@@ -117,7 +117,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
               <legend className="font-display font-semibold">{en.exportPanel.quality}</legend>
               {(['720p', '1080p'] as const).map((q) => (
                 <label key={q} className={`mt-2 flex cursor-pointer items-center gap-3 rounded-[12px] border-2 p-3 ${quality === q ? 'border-ochre bg-sand' : 'border-hairline'}`}>
-                  <input type="radio" name="quality" value={q} checked={quality === q} onChange={() => setQuality(q)} className="accent-[#E8892B]" />
+                  <input type="radio" name="quality" value={q} checked={quality === q} onChange={() => setQuality(q)} className="accent-violet" />
                   <span>{q === '720p' ? en.exportPanel.standard : en.exportPanel.hd}</span>
                 </label>
               ))}
@@ -128,7 +128,7 @@ export function ExportPanel({ project, onClose }: { project: Project; onClose: (
                 checked={project.endCard}
                 disabled={classroom}
                 onChange={(e) => setProject({ ...project, endCard: e.target.checked, updatedAt: Date.now() })}
-                className="mt-1 h-5 w-5 accent-[#E8892B]"
+                className="mt-1 h-5 w-5 accent-violet"
               />
               <span>
                 {en.exportPanel.endCard}

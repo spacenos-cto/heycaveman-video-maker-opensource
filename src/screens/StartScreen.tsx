@@ -152,14 +152,14 @@ export function StartScreen() {
           className="mt-3 w-full resize-y rounded-[20px] border-[1.5px] border-black bg-white p-5 text-[17px] leading-relaxed placeholder:text-ash/80 transition-colors focus:bg-[#fffbe0] focus:outline-none"
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
-          <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-ochre' : 'text-ash'}>
+          <span data-testid="counter" className={words > WARN_WORDS ? 'font-bold text-warn' : 'text-ash'}>
             {en.counter(words, seconds)}
           </span>
           <Button variant="ghost" className="px-0 py-0" onClick={() => onChange(EXAMPLE_LESSON)}>
             {en.tryExample}
           </Button>
         </div>
-        {words > WARN_WORDS && <p className="mt-2 text-sm text-ochre">{en.tooLong}</p>}
+        {words > WARN_WORDS && <p className="mt-2 text-sm font-semibold text-warn">{en.tooLong}</p>}
         {hasLink && (
           <div className="panel mt-3 flex flex-wrap items-center gap-3 p-4 text-sm" role="status">
             <span className="flex-1">{en.linkNote}</span>
@@ -238,7 +238,7 @@ export function StartScreen() {
       </div>
       {meet && <CavemanSheet mode="first" initial={projectDefaults().caveman} onDone={met_} />}
       {askRemake && project && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={() => setAskRemake(false)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4 sm:items-center" onClick={() => setAskRemake(false)}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="remake-title" aria-describedby="remake-body" className="panel w-full max-w-md p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && setAskRemake(false)}>
             <h2 id="remake-title" className="font-display text-2xl font-bold">{en.remake.title}</h2>
             <p id="remake-body" className="mt-2">{en.remake.body}</p>

@@ -147,8 +147,8 @@ export function Stage({ sceneIndex, frame, selection, onSelect }: { sceneIndex: 
         onPointerCancel={end}
         onKeyDown={onKey}
       >
-        {guides.x && <line x1={width / 2} y1={0} x2={width / 2} y2={height} stroke="#E8892B" strokeWidth={3} strokeDasharray="12 8" />}
-        {guides.y && <line x1={0} y1={height / 2} x2={width} y2={height / 2} stroke="#E8892B" strokeWidth={3} strokeDasharray="12 8" />}
+        {guides.x && <line x1={width / 2} y1={0} x2={width / 2} y2={height} stroke="#5c4ade" strokeWidth={3} strokeDasharray="12 8" />}
+        {guides.y && <line x1={0} y1={height / 2} x2={width} y2={height / 2} stroke="#5c4ade" strokeWidth={3} strokeDasharray="12 8" />}
         {items.map((sel) => {
           const b = box(sel);
           const on = same(sel, selection);
@@ -162,19 +162,19 @@ export function Stage({ sceneIndex, frame, selection, onSelect }: { sceneIndex: 
                 width={b.w}
                 height={b.h}
                 fill="transparent"
-                stroke={on ? '#E8892B' : 'transparent'}
+                stroke={on ? '#5c4ade' : 'transparent'}
                 strokeWidth={4}
                 strokeDasharray={on ? undefined : '10 8'}
-                className="cursor-move hover:stroke-[#E8892B]/60"
+                className="cursor-move hover:stroke-[#5c4ade]/60"
                 data-testid={`stage-${sel.kind}`}
                 data-asset={label}
                 onPointerDown={(e) => begin(e, sel, 'move')}
               />
               {on && (
                 <>
-                  <line x1={b.cx} y1={b.cy - b.h / 2} x2={b.cx} y2={b.cy - b.h / 2 - handle * 3} stroke="#E8892B" strokeWidth={3} />
+                  <line x1={b.cx} y1={b.cy - b.h / 2} x2={b.cx} y2={b.cy - b.h / 2 - handle * 3} stroke="#5c4ade" strokeWidth={3} />
                   <circle cx={b.cx} cy={b.cy - b.h / 2 - handle * 3} r={handle} fill="#FFFFFF" stroke="#1F1A17" strokeWidth={3} className="cursor-grab" data-testid="rotate-handle" onPointerDown={(e) => begin(e, sel, 'rotate')} />
-                  <rect x={b.cx + b.w / 2 - handle} y={b.cy + b.h / 2 - handle} width={handle * 2} height={handle * 2} rx={4} fill="#E8892B" stroke="#1F1A17" strokeWidth={3} className="cursor-nwse-resize" data-testid="resize-handle" onPointerDown={(e) => begin(e, sel, 'resize')} />
+                  <rect x={b.cx + b.w / 2 - handle} y={b.cy + b.h / 2 - handle} width={handle * 2} height={handle * 2} rx={4} fill="#5c4ade" stroke="#1F1A17" strokeWidth={3} className="cursor-nwse-resize" data-testid="resize-handle" onPointerDown={(e) => begin(e, sel, 'resize')} />
                 </>
               )}
             </g>

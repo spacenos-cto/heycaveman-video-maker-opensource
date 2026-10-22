@@ -69,7 +69,7 @@ export function VoicePanel({ onClose }: { onClose: () => void }) {
 
   const choice = (m: Mode, title: string, hint: string) => (
     <label className={`flex cursor-pointer items-start gap-3 rounded-[12px] border-2 p-3 ${mode === m ? 'border-ochre bg-sand' : 'border-hairline'}`}>
-      <input type="radio" name="voice-mode" checked={mode === m} onChange={() => setMode(m)} className="mt-1 accent-[#E8892B]" />
+      <input type="radio" name="voice-mode" checked={mode === m} onChange={() => setMode(m)} className="mt-1 accent-violet" />
       <span>
         <span className="font-display font-semibold">{title}</span>
         <span className="block text-sm text-ash">{hint}</span>
@@ -78,7 +78,7 @@ export function VoicePanel({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgb(31_26_23/0.45)] p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4 sm:items-center" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby="voice-title" className="panel max-h-[90vh] w-full max-w-xl overflow-y-auto p-6" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.key === 'Escape' && onClose()}>
         <div className="flex items-start justify-between">
           <h2 id="voice-title" className="font-display text-2xl font-bold">{en.voice.title}</h2>

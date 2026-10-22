@@ -18,10 +18,13 @@
   --color-ash: #4b4b5a;
   --color-ochre: #000000; /* actions are black */
   --color-terracotta: #5c4ade; /* voltage violet: links and quiet actions */
-  --color-moss: #138a55;
+  --color-moss: #0f7a4a; /* darkened from #138a55 so small text passes 4.5:1 on white */
   --color-river: #4da2ff; /* electric blue: the ribbon, focus */
-  --color-berry: #e03e00;
+  --color-berry: #c43600; /* darkened from #e03e00 for 4.5:1 */
   --color-hairline: rgb(0 0 0 / 0.14);
+  --color-warn: #8a5300; /* warnings ("too long") */
+  --color-focus: #5c4ade; /* focus rings: 3:1 or more on both papers */
+  --color-outline: #000000; /* card and pill outlines */
 
   /* the sticker set */
   --color-blue: #4da2ff;
@@ -97,7 +100,7 @@ h1.font-display {
   overflow: hidden;
   white-space: nowrap;
   background: var(--color-lavender);
-  border-bottom: 1.5px solid #000;
+  border-bottom: 1.5px solid var(--color-outline);
 }
 .marquee > div {
   will-change: transform;
@@ -119,9 +122,10 @@ h1.font-display {
 /* ---------- Things you can press: outlined pills ---------- */
 @utility sticker {
   position: relative;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--color-outline);
   border-radius: var(--radius-button);
-  background-color: #fff;
+  background-color: var(--color-bone);
+  color: var(--color-charcoal);
   font-family: var(--font-body) !important;
   font-weight: 800 !important;
   text-transform: uppercase;
@@ -142,8 +146,9 @@ h1.font-display {
 }
 /* The primary action: black pill, white letters; it flashes a sticker colour on hover. */
 .sticker.bg-ochre {
-  background-color: #000;
-  color: #fff !important;
+  background-color: var(--color-ochre);
+  border-color: var(--color-ochre);
+  color: var(--color-bone) !important;
 }
 .sticker.bg-ochre:hover:not(:disabled) {
   background-color: var(--color-ember);
@@ -152,13 +157,13 @@ h1.font-display {
 
 /* ---------- Paper cards: white, black outline, no shadow ---------- */
 @utility panel {
-  background: #fff;
-  border: 1.5px solid #000;
+  background: var(--color-bone);
+  border: 1.5px solid var(--color-outline);
   border-radius: var(--radius-card);
 }
 
 /* Lines drawn "in charcoal" are real black outlines here. */
-.border-charcoal { border-color: #000; }
+.border-charcoal { border-color: var(--color-outline); }
 .bg-charcoal { background: #000; }
 
 /* Wherever the caveman stands outside a video: a flat pastel card. */
@@ -251,7 +256,7 @@ h1.font-display {
 }
 
 input[type='range'] {
-  accent-color: #000;
+  accent-color: var(--color-charcoal);
 }
 ::selection {
   background: var(--color-sun);
@@ -259,7 +264,7 @@ input[type='range'] {
 
 @layer base {
   :focus-visible {
-    outline: 3px solid var(--color-river);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
 }
@@ -280,8 +285,8 @@ input[type='range'] {
 
 /* ---------- Night: the same sticker book on dark paper (Settings › Appearance) ---------- */
 [data-theme='dark'] {
-  --color-cave-paper: #17151f;
-  --color-bone: #23202f;
+  --color-cave-paper: #14121c;
+  --color-bone: #221f2e;
   --color-charcoal: #f4f1ff;
   --color-ash: #b9b4cc;
   --color-ochre: #ffffff;
@@ -289,17 +294,16 @@ input[type='range'] {
   --color-moss: #55db9c;
   --color-berry: #ff7a4d;
   --color-hairline: rgb(255 255 255 / 0.16);
+  --color-warn: #ffc94d;
+  --color-focus: #c9bcff;
+  --color-outline: #8d88a3;
   color-scheme: dark;
 }
-[data-theme='dark'] .bg-white,
-[data-theme='dark'] .panel,
-[data-theme='dark'] .sticker { background-color: #23202f; }
-[data-theme='dark'] .border-black,
-[data-theme='dark'] .panel,
-[data-theme='dark'] .sticker { border-color: rgb(255 255 255 / 0.82); }
+/* Cards and pills take Night from the tokens; these patch the plain Tailwind colours some screens still use. */
+[data-theme='dark'] .bg-white { background-color: var(--color-bone); }
+[data-theme='dark'] .border-black { border-color: var(--color-outline); }
 [data-theme='dark'] .text-black { color: #f4f1ff; }
 [data-theme='dark'] .bg-black { background-color: #f4f1ff; color: #000; }
-[data-theme='dark'] .sticker.bg-ochre { background-color: #f4f1ff; color: #000 !important; }
 /* Pastel stickers keep dark ink so they stay readable at night. */
 [data-theme='dark'] :is(.bg-sun, .bg-sand, .bg-mint, .bg-lavender, .bg-ember, .bg-blue, .marquee, .rig-stage, [class*='bg-[#']) { color: #000; }
 [data-theme='dark'] :is(.bg-sun, .bg-sand, .bg-mint, .bg-lavender, .bg-ember) :is(.text-ash, .text-black) { color: #000; }
