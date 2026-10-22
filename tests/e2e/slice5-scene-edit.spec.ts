@@ -20,7 +20,8 @@ test('change one scene\'s drawing, caption and action; the player updates, undo 
   await expect(player.getByTestId('caveman')).toHaveAttribute('data-motion', 'celebrate');
 
   // Drawing: swap what's there for a star
-  for (const remove of await panel.getByRole('button', { name: /^Remove / }).all()) await remove.click();
+  const removes = panel.getByRole('button', { name: /^Remove / });
+  while ((await removes.count()) > 0) await removes.first().click();
   await expect(player.getByTestId('prop')).toHaveCount(0);
   await panel.getByRole('button', { name: 'Add a drawing' }).click();
   await panel.getByPlaceholder(/Try "plant"/).fill('star');
