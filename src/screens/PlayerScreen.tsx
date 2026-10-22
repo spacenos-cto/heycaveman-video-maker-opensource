@@ -166,10 +166,12 @@ export function PlayerScreen() {
     setFrame((f) => (f >= start && f < end ? f : Math.min(start + 24, end - 1)));
   }, [editing, tl, playing]);
 
-  if (!project || !tl) {
-    go('start');
-    return null;
-  }
+  // No video open: go to Start after this render, never during it.
+  const missing = !project || !tl;
+  useEffect(() => {
+    if (missing) go('start', { replace: true });
+  }, [missing, go]);
+  if (!project || !tl) return null;
   const editIndex = editing !== null && editing < project.scenes.length ? editing : null;
   const openScene = (i: number) => {
     seek(Math.min(tl.starts[i] + 24, (tl.starts[i + 1] ?? tl.total) - 1));

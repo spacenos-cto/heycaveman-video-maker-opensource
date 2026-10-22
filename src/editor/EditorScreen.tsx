@@ -100,10 +100,12 @@ export function EditorScreen() {
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
-  if (!project || !scene) {
-    go('start');
-    return null;
-  }
+  // No video open (e.g. Back after it was deleted): go to Start after this render, never during it.
+  const missing = !project || !scene;
+  useEffect(() => {
+    if (missing) go('start', { replace: true });
+  }, [missing, go]);
+  if (!project || !scene) return null;
 
   const select = (i: number) => {
     setPlaying(false);
