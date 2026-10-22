@@ -56,15 +56,24 @@ test('My videos: rename, duplicate, delete to Recently deleted, restore, and pro
   await page.getByRole('button', { name: 'My videos' }).click();
   const cards = page.getByTestId('video-card');
   await expect(cards).toHaveCount(1);
-  await cards.first().getByRole('button', { name: 'Rename' }).click();
+  const more = () => cards.first().getByRole('button', { name: /^Options for / });
+  await more().click();
+  await cards.first().getByRole('menuitem', { name: 'Rename' }).click();
   await page.getByLabel('New title').fill('Rocks and minerals');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(cards.first()).toContainText('Rocks and minerals');
-  await cards.first().getByRole('button', { name: 'Duplicate' }).click();
+  await more().click();
+  await cards.first().getByRole('menuitem', { name: 'Duplicate' }).click();
   await expect(cards).toHaveCount(2);
 
-  page.once('dialog', (d) => void d.accept());
-  await cards.first().getByRole('button', { name: 'Delete' }).click();
+  // Delete needs no confirm box: it can be undone from the toast, or restored later.
+  await more().click();
+  await cards.first().getByRole('menuitem', { name: 'Delete' }).click();
+  await expect(cards).toHaveCount(1);
+  await page.getByTestId('deleted-toast').getByRole('button', { name: 'Undo' }).click();
+  await expect(cards).toHaveCount(2);
+  await more().click();
+  await cards.first().getByRole('menuitem', { name: 'Delete' }).click();
   await expect(cards).toHaveCount(1);
   await expect(page.getByTestId('deleted-card')).toHaveCount(1);
   await page.getByRole('button', { name: 'Restore' }).click();

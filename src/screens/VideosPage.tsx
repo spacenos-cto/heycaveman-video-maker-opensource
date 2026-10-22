@@ -1,6 +1,6 @@
 // My videos (devpost/prd.md > F14): every project saved on this device, plus Recently deleted.
 import { useEffect, useRef, useState } from 'react';
-import { FilePlus, FolderOpen } from 'lucide-react';
+import { FilePlus, FolderOpen, MoreHorizontal, Undo2 } from 'lucide-react';
 import { checkSpace } from '../offline/status';
 import { en } from '../i18n/en';
 import { useApp } from '../store/app';
@@ -26,9 +26,23 @@ const length = (p: Project) => {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 };
 
-function Card({ p }: { p: Project }) {
+/** One video: Open, plus a ⋯ menu for the rest (finish-to-submit PRD CLUTTER-2). */
+function Card({ p, onDeleted }: { p: Project; onDeleted: (p: Project) => void }) {
   const { openProject, renameProject, duplicateProject, deleteProject, saveProjectFile } = useApp();
   const [renaming, setRenaming] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: PointerEvent) => !menuRef.current?.contains(e.target as Node) && setMenu(false);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [menu]);
+  const item = (label: string, act: () => void, danger = false) => (
+    <button type="button" role="menuitem" onClick={() => { setMenu(false); act(); }} className={`block w-full border-b border-hairline px-4 py-2.5 text-left text-sm font-extrabold uppercase tracking-[0.03em] last:border-0 hover:bg-sun hover:text-[#000] ${danger ? 'text-berry' : ''}`}>
+      {label}
+    </button>
+  );
   const [title, setTitle] = useState(p.title);
   const first = p.scenes[0];
   return (
@@ -55,12 +69,21 @@ function Card({ p }: { p: Project }) {
         <p className="mt-1 text-sm text-ash">
           {length(p)} · {en.videos.edited(ago(p.updatedAt))}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          <Button variant="primary" className="px-3 py-1.5" onClick={() => void openProject(p.id)}>{en.videos.open}</Button>
-          <Button className="px-3 py-1.5" onClick={() => setRenaming((r) => !r)}>{en.videos.rename}</Button>
-          <Button className="px-3 py-1.5" onClick={() => void duplicateProject(p.id)}>{en.videos.duplicate}</Button>
-          <Button className="px-3 py-1.5" onClick={() => saveProjectFile(p)}>{en.videos.saveFile}</Button>
-          <Button className="px-3 py-1.5" onClick={() => window.confirm(en.videos.confirmDelete(p.title)) && void deleteProject(p.id)}>{en.videos.delete}</Button>
+        <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+          <Button variant="primary" className="px-4 py-1.5" onClick={() => void openProject(p.id)}>{en.videos.open}</Button>
+          <div className="relative" ref={menuRef} onKeyDown={(e) => e.key === 'Escape' && setMenu(false)}>
+            <button type="button" className="sticker flex h-9 w-9 items-center justify-center" aria-label={en.videos.more(p.title)} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+              <MoreHorizontal size={18} aria-hidden="true" />
+            </button>
+            {menu && (
+              <div role="menu" className="panel pop-in absolute bottom-11 right-0 z-30 w-48 overflow-hidden p-0">
+                {item(en.videos.rename, () => setRenaming(true))}
+                {item(en.videos.duplicate, () => void duplicateProject(p.id))}
+                {item(en.videos.saveFile, () => saveProjectFile(p))}
+                {item(en.videos.delete, () => void deleteProject(p.id).then(() => onDeleted(p)), true)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </li>
@@ -71,6 +94,12 @@ export function VideosPage() {
   const { projects, refreshProjects, restoreProject, go, openProjectFile } = useApp();
   const [used, setUsed] = useState<string | null>(null);
   const [fileNote, setFileNote] = useState<string | null>(null);
+  const [justDeleted, setJustDeleted] = useState<Project | null>(null);
+  useEffect(() => {
+    if (!justDeleted) return;
+    const t = setTimeout(() => setJustDeleted(null), 8000);
+    return () => clearTimeout(t);
+  }, [justDeleted]);
   const picker = useRef<HTMLInputElement>(null);
   const live = projects.filter((p) => !p.deletedAt);
   const deleted = projects.filter((p) => p.deletedAt);
@@ -119,8 +148,19 @@ export function VideosPage() {
         <p className="mt-10 text-center font-display text-xl text-ash">{en.videos.empty}</p>
       ) : (
         <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {live.map((p) => <Card key={p.id} p={p} />)}
+          {live.map((p) => <Card key={p.id} p={p} onDeleted={setJustDeleted} />)}
         </ul>
+      )}
+
+      {justDeleted && (
+        <div className="fixed inset-x-0 bottom-10 z-40 flex justify-center px-4">
+          <p role="status" className="flex items-center gap-4 rounded-full py-2 pl-5 pr-2 text-sm font-semibold" style={{ background: '#000', color: '#fff' }} data-testid="deleted-toast">
+            {en.videos.deleted(justDeleted.title)}
+            <button type="button" className="flex items-center gap-1.5 rounded-full border-[1.5px] border-[#000] px-3 py-1.5 font-extrabold uppercase" style={{ background: 'var(--color-sun)', color: '#000' }} onClick={() => { void restoreProject(justDeleted.id); setJustDeleted(null); }}>
+              <Undo2 size={16} aria-hidden="true" /> {en.videos.undo}
+            </button>
+          </p>
+        </div>
       )}
 
       {deleted.length > 0 && (
