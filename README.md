@@ -14,6 +14,10 @@ Stone Age is the free, open-source edition of HeyCaveman. A teacher pastes a les
 
 ## Try it in a minute
 
+**Live: [stoneage.heycaveman.com](https://stoneage.heycaveman.com)** — open it, make a video, then turn your Wi-Fi off and make another.
+
+To run it yourself:
+
 ```bash
 git clone <this repository>
 cd <the cloned folder>
@@ -95,6 +99,10 @@ npm run test:e2e   # browser tests (first: npx playwright install chromium; need
 ## Privacy
 
 No account, no analytics, no usage pings, no cookies. Lessons, videos, recordings and pictures stay in the browser on your device. The only network requests the app makes are its own files and, if you choose Caveman voices, the one-time voice-model download from Hugging Face. Links to GitHub and HeyCaveman open only when you click them. For schools: [`docs/for-schools.md`](docs/for-schools.md).
+
+## Hosting
+
+The live site is a static build on Cloudflare Pages: build command `npm run build`, output folder `dist`, Node version from `.nvmrc`, and `VITE_REPO_URL` set to this repository's address. It must sit at the root of its domain, because the offline helper (`/sw.js`) covers the whole site. `public/_headers` makes browsers re-check the page and the offline helper, so updates arrive.
 
 ## Project structure
 

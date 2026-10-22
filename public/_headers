@@ -1,0 +1,8 @@
+# Cloudflare Pages headers (finish-to-submit PRD SHIP-1).
+# The offline helper, the page and the install manifest are always re-checked, so a new version reaches people.
+/sw.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
