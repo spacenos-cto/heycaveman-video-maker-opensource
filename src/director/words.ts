@@ -30,16 +30,48 @@ export function stem(word: string): string {
 }
 
 /**
- * Does a manifest name ("plant*", "leaves", "living room") match this text?
- * Returns how strongly: 2 = exact word, 1 = prefix or stem match, 0 = none.
+ * Manifest names that are weak hints, not the topic: time words, adjectives, everyday verbs.
+ * "Leaves catch the bright sunlight every day" is about leaves and sunlight, not days or light bulbs,
+ * so these only bring a drawing when nothing in the sentence names a real thing.
  */
-export function nameMatch(name: string, words: string[], lowered: string): number {
-  if (name.includes(' ')) return lowered.includes(name) ? 2 : 0;
+export const WEAK_NAMES = new Set([
+  'day', 'days', 'date', 'week*', 'month*', 'year*', 'season*', 'time', 'late', 'early', 'wait*', 'morning',
+  'bright', 'think*', 'smart', 'clever', 'important', 'remember', 'attention', 'wow', 'careful',
+  'food', 'eat*', 'meal*', 'hungry', 'lunch', 'dinner', 'snack', 'healthy', 'drink*', 'energy',
+  'work', 'feel*', 'kind*', 'care', 'say*', 'said', 'tell*', 'word*', 'rest', 'tired',
+  'down', 'less', 'lower', 'up', 'more', 'higher', 'live', 'living', 'family', 'find*', 'place*',
+  'best', 'great', 'excellent', 'famous', 'give', 'giving', 'present', 'far', 'sky', 'half', 'party',
+  'fly', 'flying', 'strong', 'wonder*', 'progress', 'result*', 'data', 'screen', 'online', 'digital', 'save*',
+]);
+
+/** A "starts with" name counts only for short endings: "plant*" matches plants and planted, "win*" not window. */
+const MAX_ENDING = 2;
+
+/** Where and how well a manifest name ("plant*", "leaves", "living room") matches: `at` = word index. */
+export function matchName(name: string, words: string[], lowered: string): { strength: 0 | 1 | 2; at: number } {
+  const none = { strength: 0, at: -1 } as const;
+  const strength = WEAK_NAMES.has(name) ? 1 : 2;
+  if (name.includes(' ')) {
+    if (!lowered.includes(name)) return none;
+    const first = name.split(' ')[0];
+    return { strength, at: Math.max(0, words.indexOf(first)) };
+  }
   if (name.endsWith('*')) {
     const prefix = name.slice(0, -1);
-    return words.some((w) => w.startsWith(prefix)) ? 1 : 0;
+    const at = words.findIndex((w) => {
+      const root = stem(w);
+      return root.startsWith(prefix) && root.length - prefix.length <= MAX_ENDING;
+    });
+    return at < 0 ? none : { strength, at };
   }
-  if (words.includes(name)) return 2;
   const stemmed = stem(name);
-  return words.some((w) => stem(w) === stemmed) ? 1 : 0;
+  const at = words.findIndex((w) => w === name || stem(w) === stemmed);
+  return at < 0 ? none : { strength, at };
+}
+
+/**
+ * Does a manifest name match this text? 2 = a real thing named, 1 = only a weak hint, 0 = none.
+ */
+export function nameMatch(name: string, words: string[], lowered: string): number {
+  return matchName(name, words, lowered).strength;
 }
