@@ -16,7 +16,7 @@ import { StartScreen } from './screens/StartScreen';
 import { VideosPage } from './screens/VideosPage';
 import { AboutPage, HelpPage, SettingsPage } from './screens/InfoPages';
 import { purgeOldDeleted } from './storage/db';
-import { useApp } from './store/app';
+import { useApp, type NavState } from './store/app';
 import { Logo } from './ui/Logo';
 import { OfflineIndicator, StatusBanners } from './ui/StatusBanners';
 
@@ -56,8 +56,17 @@ export function App() {
   useEffect(() => {
     void useSettings.getState().load();
     void purgeOldDeleted().then(() => useApp.getState().refreshProjects());
+    // Browser Back and Forward move between screens (finish-to-submit PRD NAV-1).
+    if (!(history.state as NavState | null)?.screen) history.replaceState({ screen: 'start' } satisfies NavState, '', location.pathname + location.search + location.hash);
+    const onPop = (e: PopStateEvent) => {
+      const target = (e.state as NavState | null)?.screen ?? 'start';
+      const { project, go: show } = useApp.getState();
+      show((target === 'player' || target === 'editor') && !project ? 'start' : target, { fromHistory: true });
+    };
+    window.addEventListener('popstate', onPop);
     const id = location.hash.match(/^#project=([\w-]+)$/)?.[1];
-    if (id) void useApp.getState().openProject(id);
+    if (id) void useApp.getState().openProject(id, true);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   const pill = 'flex h-11 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-black bg-white px-4 text-[13px] font-extrabold uppercase tracking-[0.035em] transition-transform duration-200 hover:-rotate-2 hover:bg-sun';

@@ -11,6 +11,9 @@ import { emptyHistory, record, redo as redoStep, undo as undoStep, type History 
 
 export type Screen = 'start' | 'making' | 'player' | 'editor' | 'videos' | 'settings' | 'help' | 'about';
 
+/** What each browser-history entry remembers: its screen and the screen it was opened from. */
+export type NavState = { screen: Screen; prev?: Screen };
+
 const DRAFT_KEY = 'stoneage.draft';
 const AUTOSAVE_MS = 300;
 
@@ -37,13 +40,15 @@ type AppState = {
   /** Make from the Lesson Builder instead of the text box. */
   pendingLesson: LessonFields | null;
   setDraft: (text: string) => void;
-  go: (screen: Screen) => void;
+  /** Show a screen and record it in the browser history (devpost: finish-to-submit PRD NAV-1). */
+  go: (screen: Screen, opts?: { replace?: boolean; fromHistory?: boolean }) => void;
   /** Replace the open project (auto-saved). Changes to the same video can be undone; `key` merges typing into one step. */
   setProject: (project: Project | null, key?: string) => void;
   undo: () => void;
   redo: () => void;
   setRemakeId: (id: string | null) => void;
-  openProject: (id: string) => Promise<void>;
+  /** `replace` = reopening from the address bar (a reload), not a new step back can undo. */
+  openProject: (id: string, replace?: boolean) => Promise<void>;
   refreshProjects: () => Promise<void>;
   renameProject: (id: string, title: string) => Promise<void>;
   duplicateProject: (id: string) => Promise<void>;
@@ -102,11 +107,24 @@ export const useApp = create<AppState>((set, get) => ({
     }
     set({ draft });
   },
-  go: (screen) => {
-    if (screen !== 'player' && screen !== 'editor') {
-      releaseProject();
-      if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  go: (screen, opts) => {
+    const from = get().screen;
+    const state = history.state as NavState | null;
+    if (opts?.fromHistory || screen === from) {
+      /* the browser already moved, or nothing to record */
+    } else if (state?.prev === screen && !opts?.replace) {
+      // Going back to where we came from = the browser's Back, so the two never disagree.
+      history.back();
+      return;
+    } else {
+      const project = get().project;
+      const url = (screen === 'player' || screen === 'editor') && project ? `#project=${project.id}` : location.pathname + location.search;
+      // "Making" is a passing screen: the video replaces it, so Back never re-runs Make.
+      const entry: NavState = { screen, prev: opts?.replace || from === 'making' ? state?.prev : from };
+      if (opts?.replace || from === 'making') history.replaceState(entry, '', url);
+      else history.pushState(entry, '', url);
     }
+    if (screen !== 'player' && screen !== 'editor') releaseProject();
     set({ screen });
     if (screen === 'videos') void get().refreshProjects();
   },
@@ -119,7 +137,8 @@ export const useApp = create<AppState>((set, get) => ({
     if (!project) return;
     if (isNew) {
       void loadUploads(project);
-      if (location.hash !== `#project=${project.id}`) history.replaceState(null, '', `#project=${project.id}`);
+      const showing = get().screen === 'player' || get().screen === 'editor';
+      if (showing && location.hash !== `#project=${project.id}`) history.replaceState(history.state, '', `#project=${project.id}`);
       void claimProject(project.id).then((busy) => {
         set({ readOnly: busy });
         useOffline.setState({ otherTab: busy });
@@ -130,12 +149,12 @@ export const useApp = create<AppState>((set, get) => ({
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => void persist({ ...project, updatedAt: Date.now() }), AUTOSAVE_MS);
   },
-  openProject: async (id) => {
+  openProject: async (id, replace) => {
     const db = await storage();
     const p = await db.getProject(id);
     if (!p || p.deletedAt) return;
     get().setProject(p);
-    set({ screen: 'player' });
+    get().go('player', { replace });
   },
   refreshProjects: async () => {
     const db = await storage();
@@ -199,7 +218,7 @@ export const useApp = create<AppState>((set, get) => ({
     const p = existing ? { ...project, id: newId(), updatedAt: Date.now() } : { ...project, updatedAt: Date.now() };
     await db.putProject(p);
     get().setProject(p);
-    set({ screen: 'player' });
+    get().go('player');
     return { newer };
   },
   // setProject records a step too; the step's own history replaces it straight after.
