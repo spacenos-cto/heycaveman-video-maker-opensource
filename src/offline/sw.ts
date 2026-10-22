@@ -30,7 +30,9 @@ self.addEventListener('install', (event) => {
         if (!(await cache.match(key))) {
           const res = await fetch(urlOf(entry.url), { cache: 'reload' });
           if (!res.ok) throw new Error(`offline save failed for ${entry.url}`);
-          await cache.put(key, res);
+          // Some hosts redirect /index.html to /. Browsers refuse a redirected copy as a page, so save a clean one.
+          const clean = res.redirected ? new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers }) : res;
+          await cache.put(key, clean);
         }
         done++;
         if (done % 3 === 0 || done === total) await broadcast({ type: 'sw-progress', done, total });
