@@ -37,6 +37,11 @@ export const en = {
     shuffleHint: 'New poses, drawings and colours. Your words stay the same.',
     readingSpeed: 'Reading speed',
     pausedForTalk: 'Paused here for discussion — press Play to go on.',
+    editScenes: 'Edit scenes',
+    settings: 'Video settings',
+    tabs: { look: 'Look', voice: 'Voice', scene: 'Scene' },
+    voiceSettings: 'Voice settings',
+    savedHere: 'Videos are saved in this browser only.',
   },
   exportPanel: {
     open: 'Download video',

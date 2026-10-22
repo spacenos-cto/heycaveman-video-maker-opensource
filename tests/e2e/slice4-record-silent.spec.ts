@@ -7,7 +7,8 @@ async function openRecorder(page: Page) {
   await page.getByLabel('Your lesson').fill('Leaves catch the bright sunlight every day.\n\nRoots drink water from the soil below.');
   await page.getByRole('button', { name: 'Make my video' }).click();
   await expect(page.getByTestId('player')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: 'Voice', exact: true }).click();
+  await page.getByRole('tab', { name: 'Voice' }).click();
+  await page.getByRole('button', { name: 'Voice settings' }).click();
   await page.getByLabel(/Record my voice/).check();
   await page.getByRole('dialog').getByRole('button', { name: 'Record' }).first().click();
   await expect(page.getByTestId('teleprompter')).toContainText('Leaves catch');

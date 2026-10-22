@@ -16,7 +16,7 @@ function Banner({ tone, children, testid }: { tone: 'info' | 'warn' | 'ok'; chil
 
 export function StatusBanners() {
   const s = useOffline();
-  const { notice, dismissNotice, project } = useApp();
+  const { notice, dismissNotice, project, screen } = useApp();
 
   useEffect(() => {
     if (!s.justReady) return;
@@ -54,7 +54,8 @@ export function StatusBanners() {
       )}
       {s.lowSpace && <Banner tone="warn">{en.offline.lowSpace}</Banner>}
       {s.otherTab && <Banner tone="warn" testid="other-tab">{en.offline.otherTab}</Banner>}
-      {notice && (
+      {/* The Player says this in its side card instead (PRD PLAYER-1). */}
+      {notice && screen !== 'player' && (
         <Banner tone="info">
           <span className="flex-1">{notice}</span>
           <Button variant="ghost" onClick={dismissNotice}>{en.offline.dismiss}</Button>

@@ -30,7 +30,8 @@ test('download voices once, voice a video, then voice another one offline and ex
   await expect(page.getByTestId('offline-dot')).toBeVisible({ timeout: 60_000 });
   await make(page);
 
-  // The card after the first video offers the one-time download.
+  // The Voice tab offers the one-time download.
+  await page.getByRole('tab', { name: 'Voice' }).click();
   await expect(page.getByTestId('voice-card')).toContainText('90 MB');
   const t0 = Date.now();
   await page.getByTestId('voice-card').getByRole('button', { name: /Download voices/ }).click();
@@ -44,7 +45,8 @@ test('download voices once, voice a video, then voice another one offline and ex
   await page.reload();
   await expect(page.getByTestId('offline-pill')).toBeVisible();
   await make(page, 'Water turns into steam when it gets hot.\n\nSteam rises up into the cold sky.');
-  await page.getByRole('button', { name: 'Voice' }).click();
+  await page.getByRole('tab', { name: 'Voice' }).click();
+  await page.getByRole('button', { name: 'Voice settings' }).click();
   await page.getByLabel(/Caveman voices/).check();
   await expect(page.getByText('✓ Voices ready')).toBeVisible({ timeout: 30_000 });
   const t1 = Date.now();
