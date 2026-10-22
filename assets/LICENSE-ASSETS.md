@@ -13,3 +13,7 @@ Schools, teachers and anyone else can copy, change and reuse them for any purpos
 - **No code from that earlier project is used here**; only these output files.
 - The tag list that matches lesson words to drawings (`assets/manifest.json`) is new work for this repository.
 - Four drawings were left out after a classroom-suitability review (romance, religious or astrology themes), following the product's child-safety rules.
+
+## Added in this repository
+
+- Six drawings were made new for this repository on **22 October 2026**, with AI assistance (Claude), in the same simple SVG style: `sun.svg`, `leaf.svg`, `cloud.svg`, `rain.svg`, `tree.svg` and `water-drop.svg`. They are CC0 like the rest.

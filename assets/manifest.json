@@ -475,9 +475,6 @@
    "category": "nature",
    "names": [
     "plant*",
-    "leaf",
-    "leaves",
-    "tree*",
     "flower*",
     "seed*",
     "grow*",
@@ -541,8 +538,6 @@
    "names": [
     "star",
     "stars",
-    "sun",
-    "shine*",
     "best",
     "great",
     "excellent",
@@ -586,13 +581,99 @@
    "kind": "prop",
    "category": "food",
    "names": [
-    "water",
-    "drink*",
     "bottle*",
+    "drink*",
     "thirst*",
-    "hydrat*",
+    "hydrat*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "sun",
+   "file": "assets/sun.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "sun",
+    "sunlight",
+    "sunshine",
+    "sunny",
+    "shine*",
+    "solar",
+    "daylight"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "leaf",
+   "file": "assets/leaf.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "leaf",
+    "leaves",
+    "leafy"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "cloud",
+   "file": "assets/cloud.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "cloud*",
+    "weather",
+    "vapour",
+    "vapor",
+    "steam",
+    "fog*"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "rain",
+   "file": "assets/rain.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "rain*",
+    "storm*",
+    "umbrella",
+    "precipitation"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "tree",
+   "file": "assets/tree.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "tree*",
+    "forest*",
+    "wood*",
+    "branch*",
+    "oxygen"
+   ],
+   "kidSafeReviewed": true
+  },
+  {
+   "id": "water-drop",
+   "file": "assets/water-drop.svg",
+   "kind": "prop",
+   "category": "nature",
+   "names": [
+    "water",
+    "droplet*",
+    "wet",
     "liquid*",
-    "rain*"
+    "evaporat*",
+    "condens*",
+    "river*",
+    "ocean*",
+    "sea",
+    "lake*"
    ],
    "kidSafeReviewed": true
   },

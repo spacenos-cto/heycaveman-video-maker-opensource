@@ -62,7 +62,7 @@ flowchart LR
   C <--> H[.caveman file<br/>zip]
 ```
 
-- **No AI, by design.** The director (`src/director/`) is pure functions with a seeded random generator: rules for actions and faces, a word-matched drawing library (57 CC0 drawings), captions that keep the key words, and timing from reading speed or the voice's length.
+- **No AI, by design.** The director (`src/director/`) is pure functions with a seeded random generator: rules for actions and faces, a word-matched drawing library (63 CC0 drawings; words that name a thing beat weak hints like "day" or "bright"), captions that keep the key words, and timing from reading speed or the voice's length.
 - **One renderer for everything.** `src/video/SceneSvg.tsx` draws a scene at a frame as SVG. The player redraws it on a clock; the exporter paints the same SVG onto a canvas and encodes it with [Mediabunny](https://mediabunny.dev), so what plays is what exports.
 - **The caveman** is a hand-built SVG rig (`src/caveman/`): a skeleton with 16 motions, 6 expressions, Classic and Cartoon styles, blinking and lip-sync from the voice's loudness.
 - **Offline first.** A service worker precaches the app (about 5.4 MB on first visit). Projects, recordings and pictures live in IndexedDB; settings too.
@@ -119,6 +119,7 @@ scripts/      privacy scan, asset manifest, icons, ribbon image, screenshots
 
 - **New code:** all application code in this repository was written during the hackathon, with an AI coding agent (Claude Code), following the Devpost Learn skill pack (`.agents/skills/`).
 - **Copied assets (pre-existing work):** the drawings, sound effects and music are copied from the author's earlier HeyCaveman project, where code written with AI assistance generated them on 5–13 October 2026. They're released here under CC0. No code from that project is reused. Details: [`assets/LICENSE-ASSETS.md`](assets/LICENSE-ASSETS.md).
+- **New drawings:** sun, leaf, cloud, rain, tree and water drop were drawn new for this repository on 22 October 2026, with AI assistance, and are CC0 too.
 
 ## Licence
 
