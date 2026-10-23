@@ -2,7 +2,7 @@
 
 **Type a lesson, get a cartoon explainer video — in your browser, offline, free, with nothing leaving your device.**
 
-![The Start screen: a giant HEYCAVEMAN wordmark with the caveman, sticker drawings and a blue ribbon](docs/screenshots/01-start.png)
+![The Start screen: the HEYCAVEMAN wordmark, caveman and stickers beside the lesson card with a water-cycle lesson typed in](docs/screenshots/01-start.png)
 
 Stone Age is the free, open-source edition of HeyCaveman. A teacher pastes a lesson, presses **Make my video**, and the same friendly caveman acts it out scene by scene, with matching drawings, big key-word captions, gentle sound effects and an optional voice. There's no account, no tracking and no AI: an offline "director" turns plain text into scenes with simple, predictable word rules — the same text always makes the same video.
 
@@ -42,14 +42,14 @@ For development, `npm run dev` starts a hot-reloading server (slower than the bu
 | | |
 |---|---|
 | ![Meet your caveman: four presets and a designer](docs/screenshots/02-meet-your-caveman.png) | **Your caveman, once.** Four presets or your own design (style, skin, clothes, hair, glasses, beard, head size, name). Every new video uses it; each video keeps its own copy. |
-| ![The player with a scene panel open](docs/screenshots/03-player-and-scene-panel.png) | **Make and tweak.** The director picks one of 16 actions and a face per sentence, matching drawings or a place, a key-word caption and a sound. Tap a scene to change its words, caption, action, face, background, drawings or sound. Undo/redo with Ctrl+Z / Ctrl+Y. **Shuffle** re-rolls poses and drawings without touching the words. |
-| ![The Editor with a drawing selected on the stage](docs/screenshots/04-editor.png) | **The Editor.** Drag, resize and rotate drawings and the caveman with snap guides; set when drawings appear; several timed captions per scene; a searchable library; upload your own pictures (resized on the device). Build a video from a blank page. |
+| ![The player with scene 2 open in the Scene tab](docs/screenshots/03-player-and-scene-panel.png) | **Make and tweak.** The director picks one of 16 actions and a face per sentence, matching drawings or a place, a key-word caption and a sound. Tap a scene to change its words, caption, action, face, background, drawings or sound. Undo/redo with Ctrl+Z / Ctrl+Y. **Shuffle** re-rolls poses and drawings without touching the words. |
+| ![The Editor: scene list, stage and drawing library](docs/screenshots/04-editor.png) | **The Editor.** Drag, resize and rotate drawings and the caveman with snap guides; set when drawings appear; several timed captions per scene; a searchable library; upload your own pictures (resized on the device). Build a video from a blank page. |
 | ![The Lesson Builder filled with an example](docs/screenshots/05-lesson-builder.png) | **Start from a topic.** A fill-in-the-blanks Lesson Builder (topic, hook, key points, example, recap, quiz) and six templates turn a topic into a script in a proven explainer order: title → hook → points → example → recap → quiz → outro. |
 | ![A quiz scene revealing the right answer](docs/screenshots/06-quiz-scene.png) | **Lesson scenes.** Title card, recap card, and a quiz with a thinking countdown, then the answer (or "Discuss!") with a ding; multiple choice highlights the right answer. **Pause points** stop the player for class discussion. |
 
 **Also:** natural voices that run on the device after one 90 MB download (Kokoro-82M), or record your own, with lip-sync; Wide, Tall and Square videos; Bright, Earthy and Soft colour moods; reading speed; sound effects On/Gentle/Off; MP4 export in the browser; `.caveman` project files (voices and pictures included); My videos with recently deleted; Paper and Night themes; **Classroom mode** (`?classroom`) that hides every HeyCaveman mention. It installs as an app and works offline.
 
-<img src="docs/screenshots/07-phone.png" alt="The Start screen on a phone" width="260">
+<img src="docs/screenshots/07-phone.png" alt="The Start screen on a phone, with a lesson typed in" width="260">
 
 ---
 
